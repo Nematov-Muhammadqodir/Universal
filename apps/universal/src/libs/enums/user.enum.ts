@@ -27,3 +27,10 @@ export enum GuestAuthType {
 }
 
 registerEnumType(GuestAuthType, { name: 'GuestAuthType' });
+
+export enum GuestGender {
+  MALE = 'MALE',
+  FEMALE = 'FEMALE',
+  OTHER = 'OTHER',
+}
+registerEnumType(GuestGender, { name: 'GuestGender' });

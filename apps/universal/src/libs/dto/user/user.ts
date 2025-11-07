@@ -1,9 +1,14 @@
 import { Field, Int, ObjectType } from '@nestjs/graphql';
 import { ObjectId } from 'mongoose';
-import { GuestAuthType, GuestStatus, GuestType } from '../../enums/user.enum';
+import {
+  GuestAuthType,
+  GuestGender,
+  GuestStatus,
+  GuestType,
+} from '../../enums/user.enum';
 
 @ObjectType()
-export class User {
+export class Guest {
   @Field(() => String)
   _id: ObjectId;
 
@@ -19,6 +24,9 @@ export class User {
   @Field(() => String)
   guestPhone: string;
 
+  @Field(() => GuestGender)
+  guestGender: GuestGender;
+
   @Field(() => String)
   guestName: string;
 
@@ -27,8 +35,8 @@ export class User {
   @Field(() => String, { nullable: true })
   guestFullName?: string;
 
-  @Field(() => String, { nullable: true })
-  guestImage?: string;
+  @Field(() => String)
+  guestImage: string;
 
   @Field(() => String)
   guestCountry: string;
@@ -59,9 +67,9 @@ export class TotalCounter {
 }
 
 @ObjectType()
-export class Users {
-  @Field(() => [User])
-  list: User[];
+export class Guests {
+  @Field(() => [Guest])
+  list: Guest[];
 
   @Field(() => [TotalCounter], { nullable: true })
   metaCounter: TotalCounter[];
