@@ -42,3 +42,15 @@ export class GuestInput {
   @Field(() => GuestAuthType, { nullable: true })
   guestAuthType?: GuestAuthType;
 }
+
+@InputType()
+export class GuestLoginInput {
+  @IsNotEmpty()
+  @Field(() => String)
+  guestEmail: string;
+
+  @IsNotEmpty()
+  @Length(6, 12)
+  @Field(() => String)
+  guestPassword: string;
+}

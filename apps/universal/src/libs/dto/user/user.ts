@@ -58,6 +58,7 @@ export class Guest {
 
   @Field(() => String, { nullable: true })
   accessToken?: string;
+  memberStatus: any;
 }
 
 @ObjectType()

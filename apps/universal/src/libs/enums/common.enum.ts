@@ -22,6 +22,7 @@ export enum Message {
   SELF_SUBSCRIPTION_DENIED = 'Self subscription is denied!',
   BLOCKED_USER = 'You have been blocked, contact restaurant!',
   TOKEN_CRAETION_FAILED = 'Token creation error!',
+  PLEASE_ENTER_VALID_CREDENTIALS = 'Your email or phone number is not valid, please enter valid credentials!',
 }
 
 export enum Direction {

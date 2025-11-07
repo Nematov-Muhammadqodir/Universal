@@ -1,7 +1,7 @@
 import { Args, Mutation, Resolver } from '@nestjs/graphql';
 import { MemberService } from './member.service';
 import { Guest } from '../../libs/dto/user/user';
-import { GuestInput } from '../../libs/dto/user/user.input';
+import { GuestInput, GuestLoginInput } from '../../libs/dto/user/user.input';
 
 @Resolver()
 export class MemberResolver {
@@ -13,5 +13,15 @@ export class MemberResolver {
     console.log('Input', input);
 
     return await this.memberService.guestSignup(input);
+  }
+
+  @Mutation(() => Guest)
+  public async guestLogin(
+    @Args('input') input: GuestLoginInput,
+  ): Promise<Guest> {
+    console.log('Mutation signup');
+    console.log('Input', input);
+
+    return await this.memberService.guestLogin(input);
   }
 }

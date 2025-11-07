@@ -28,6 +28,10 @@ const GuestSchema = new Schema(
       type: String,
       required: true,
     },
+    guestEmail: {
+      type: String,
+      required: true,
+    },
     guestPassword: {
       type: String,
       select: false,
