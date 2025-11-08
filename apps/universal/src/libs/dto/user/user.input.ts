@@ -1,6 +1,11 @@
 import { Field, InputType } from '@nestjs/graphql';
 import { IsIn, IsNotEmpty, IsOptional, Length, Min } from 'class-validator';
-import { GuestAuthType, GuestGender, GuestType } from '../../enums/user.enum';
+import {
+  GuestAuthType,
+  GuestGender,
+  GuestType,
+  UserRole,
+} from '../../enums/user.enum';
 
 @InputType()
 export class GuestInput {
@@ -41,6 +46,10 @@ export class GuestInput {
   @IsOptional()
   @Field(() => GuestAuthType, { nullable: true })
   guestAuthType?: GuestAuthType;
+
+  @IsOptional()
+  @Field(() => UserRole, { nullable: true })
+  userRole?: UserRole;
 }
 
 @InputType()

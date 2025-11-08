@@ -4,7 +4,9 @@ import {
   GuestGender,
   GuestStatus,
   GuestType,
+  UserRole,
 } from '../libs/enums/user.enum';
+import { type } from 'os';
 
 const GuestSchema = new Schema(
   {
@@ -62,6 +64,11 @@ const GuestSchema = new Schema(
     guestPoints: {
       type: Number,
       default: 0,
+    },
+    userRole: {
+      type: String,
+      enum: UserRole,
+      default: UserRole.GUEST,
     },
   },
   { timestamps: true, collection: 'guests' },

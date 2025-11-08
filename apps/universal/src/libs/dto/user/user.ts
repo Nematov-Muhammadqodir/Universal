@@ -5,6 +5,7 @@ import {
   GuestGender,
   GuestStatus,
   GuestType,
+  UserRole,
 } from '../../enums/user.enum';
 
 @ObjectType()
@@ -46,6 +47,9 @@ export class Guest {
 
   @Field(() => Int)
   guestPoints: number;
+
+  @Field(() => UserRole)
+  userRole: UserRole;
 
   @Field(() => Date, { nullable: true })
   deletedAt?: Date;

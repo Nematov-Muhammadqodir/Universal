@@ -6,11 +6,16 @@ export enum GuestType {
   FAMILY = 'FAMILY',
   BUSINESS = 'BUSINESS',
   FRIENDS = 'FRIENDS',
-  HOTEL_OWNER = 'HOTEL_OWNER',
-  ADMIN = 'ADMIN',
   OTHER = 'OTHER',
 }
 registerEnumType(GuestType, { name: 'GuestType' });
+
+export enum UserRole {
+  HOTEL_OWNER = 'HOTEL_OWNER',
+  ADMIN = 'ADMIN',
+  GUEST = 'GUEST',
+}
+registerEnumType(UserRole, { name: 'UserRole' });
 
 export enum GuestStatus {
   ACTIVE = 'ACTIVE',
