@@ -6,10 +6,11 @@ import {
 import { InjectModel } from '@nestjs/mongoose';
 import { Guest } from '../../libs/dto/user/user';
 import { AuthService } from '../auth/auth.service';
-import { Model } from 'mongoose';
+import { Model, ObjectId } from 'mongoose';
 import { GuestInput, GuestLoginInput } from '../../libs/dto/user/user.input';
 import { Message } from '../../libs/enums/common.enum';
 import { GuestStatus } from '../../libs/enums/user.enum';
+import { GuestUpdateInput } from '../../libs/dto/user/user.update';
 
 @Injectable()
 export class MemberService {
@@ -50,7 +51,7 @@ export class MemberService {
   }
 
   public async guestLogin(input: GuestLoginInput): Promise<Guest> {
-    console.log('guestLogin signup', input);
+    console.log('guestLogin input', input);
     const { guestEmail, guestPassword } = input;
     const response: Guest | null = await this.guestModel
       .findOne({ guestEmail: guestEmail })
@@ -71,5 +72,20 @@ export class MemberService {
       throw new InternalServerErrorException(Message.WRONG_PASSWORD);
     response.accessToken = await this.authService.createToken(response);
     return response;
+  }
+
+  public async updateGuest(
+    guestId: ObjectId,
+    guestUpdateInput: GuestUpdateInput,
+  ): Promise<Guest> {
+    const result = await this.guestModel
+      .findByIdAndUpdate({ _id: guestId }, guestUpdateInput, { new: true })
+      .exec();
+
+    if (!result) throw new InternalServerErrorException(Message.UPDATE_FAILED);
+    result.accessToken = await this.authService.createToken(result);
+    //We are updating the access token after update because some info in token my be changed
+
+    return result;
   }
 }

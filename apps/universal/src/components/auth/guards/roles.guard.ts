@@ -29,7 +29,7 @@ export class RolesGuard implements CanActivate {
 
       const token = bearerToken.split(' ')[1],
         authMember = await this.authService.verifyToken(token),
-        hasRole = () => roles.indexOf(authMember.guestType) > -1,
+        hasRole = () => roles.indexOf(authMember.userRole) > -1,
         hasPermission: boolean = hasRole();
 
       if (!authMember || !hasPermission)
@@ -39,7 +39,6 @@ export class RolesGuard implements CanActivate {
       request.body.authMember = authMember;
       return true;
     }
-    return false;
     // description => http, rpc, gprs and etc are ignored
   }
 }
