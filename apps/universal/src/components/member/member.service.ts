@@ -88,4 +88,12 @@ export class MemberService {
 
     return result;
   }
+
+  public async getGuestProfile(guestId: ObjectId): Promise<Guest> {
+    console.log('getGuestProfile guestId', guestId);
+    const result = await this.guestModel.findById(guestId).exec();
+    if (!result)
+      throw new InternalServerErrorException(Message.SOMETHING_WENT_WRONG);
+    return result;
+  }
 }

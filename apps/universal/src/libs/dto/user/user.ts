@@ -43,6 +43,9 @@ export class Guest {
   guestCountry: string;
 
   @Field(() => String)
+  guestEmail: string;
+
+  @Field(() => String)
   guestRegion: string;
 
   @Field(() => Int)

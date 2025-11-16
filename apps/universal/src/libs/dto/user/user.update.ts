@@ -27,6 +27,9 @@ export class GuestUpdateInput {
   @IsOptional()
   @Field(() => String, { nullable: true })
   guestName?: string;
+  @IsOptional()
+  @Field(() => String, { nullable: true })
+  guestEmail?: string;
 
   @IsOptional()
   @Field(() => String, { nullable: true })
