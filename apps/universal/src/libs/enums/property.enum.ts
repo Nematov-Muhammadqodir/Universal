@@ -1,56 +1,55 @@
 import { registerEnumType } from '@nestjs/graphql';
 
-export enum RoomTypes {
-  SINGLE = 'Single',
-  DOUBLE = 'Double',
-  FAMILY = 'Family',
-  TWIN = 'Twin',
-  TWIN_DOUBLE = 'Twin Double',
-  TRIPLE = 'Triple',
-  QUADRUPLE = 'Quadruple',
-  SUITE = 'Suite',
-  STUDIO = 'Studio',
-  APARTMENT = 'Apartment',
-  DORMITORY_ROOM = 'Dormitory Room',
-  BED_IN_DORMITORY = 'Bed in Dormitory',
+export enum PropertyType {
+  HOTEL = 'Hotel',
+  GUEST_HOUSE = 'Guest House',
+  BED_AND_BREAKFAST = 'Bed and Breakfast',
+  HOMESTAY = 'Homestay',
+  HOSTEL = 'Hostel',
+  APARTHOTEL = 'Aparthotel',
+  CAPSULE_HOTEL = 'Capsule Hotel',
+  COUNTRY_HOUSE = 'Country House',
+  FARM_STAY = 'Farm Stay',
+  INN = 'Inn',
+  LOVE_HOTEL = 'Love Hotel',
+  MOTEL = 'Motel',
+  RESORT = 'Resort',
+  RIAD = 'Riad',
+  RYOKAN = 'Ryokan',
+  LODGE = 'Lodge',
 }
-registerEnumType(RoomTypes, { name: 'RoomTypes' });
+registerEnumType(PropertyType, { name: 'PropertyType' });
 
-export enum BathroomFacilities {
-  TOILET_PAPER = 'Toilet Paper',
-  SHOWER = 'Shower',
-  TOILET = 'Toilet',
-  HAIR_DRYER = 'Hair Dryer',
-  BATH = 'Bath',
-  FREE_TOILETRIES = 'Free Toiletries',
-  BIDET = 'Bidet',
-  SLIPPERS = 'Slippers',
-  BATHROBE = 'Bathrobe',
-  SPA_BATH = 'Spa Bath',
-}
-registerEnumType(BathroomFacilities, { name: 'BathroomFacilities' });
-
-export enum RoomFacilities {
-  CLOTHES_RACK = 'Clothes Rack',
-  FLAT_SCREEN_TV = 'Flat-screen TV',
-  AIR_CONDITIONING = 'Air Conditioning',
-  LINEN = 'Linen',
-  DESK = 'Desk',
-  WAKE_UP_SERVICE = 'Wake-up Service',
-  TOWELS = 'Towels',
-  WARDROBE_OR_CLOSET = 'Wardrobe or Closet',
-  HEATING = 'Heating',
-  FAN = 'Fan',
-  SAFETY_DEPOSIT_BOX = 'Safety Deposit Box',
-  TOWELS_SHEETS = 'Towels/Sheets',
-  ENTIRE_UNIT_ON_GROUND_FLOOR = 'Entire Unit on Ground Floor',
-  BALCONY = 'Balcony',
+export enum PropertyFacilities {
+  RESTAURANT = 'Restaurant',
+  ROOM_SERVICE = 'Room Service',
+  BAR = 'Bar',
+  FRONT_DESK = 'Front Desk',
+  SAUNA = 'Sauna',
+  FITNESS_CENTER = 'Fitness Center',
+  GARDEN = 'Garden',
   TERRACE = 'Terrace',
-  VIEW = 'View',
-  ELECTRIC_KETTLE = 'Electric Kettle',
-  TEA_COFFEE_MAKER = 'Tea/Coffee Maker',
-  DINING_AREA = 'Dining Area',
-  DINING_TABLE = 'Dining Table',
-  MICROWAVE = 'Microwave',
+  NON_SMOKING_ROOMS = 'Non-smoking Rooms',
+  AIRPORT_SHUTTLE = 'Airport Shuttle',
+  FAMILY_ROOMS = 'Family Rooms',
+  SPA_AND_WELLNESS_CENTER = 'Spa and Wellness Center',
+  HOT_TUB_JAZZ = 'Hot Tub/Jacuzzi',
+  FREE_WI_FI = 'Free Wi-Fi',
+  AIR_CONDITIONING = 'Air Conditioning',
+  WATER_PARK = 'Water Park',
+  ELECTRIC_VEHICLE_CHARGING_STATION = 'Electric Vehicle Charging Station',
+  SWIMMING_POOL = 'Swimming Pool',
+  BEACHFRONT = 'Beachfront',
 }
-registerEnumType(RoomFacilities, { name: 'RoomFacilities' });
+registerEnumType(PropertyFacilities, { name: 'PropertyFacilities' });
+
+export enum HotelStaffLanguages {
+  ENGLISH = 'English',
+  FRENCH = 'French',
+  ITALIAN = 'Italian',
+  KOREAN = 'Korean',
+  UZBEK = 'Uzbek',
+  RUSSIAN = 'Russian',
+  SPANISH = 'Spanish',
+}
+registerEnumType(HotelStaffLanguages, { name: 'HotelStaffLanguages' });
