@@ -32,7 +32,7 @@ export class MemberResolver {
   public async guestLogin(
     @Args('input') input: GuestLoginInput,
   ): Promise<Guest> {
-    console.log('Mutation signup');
+    console.log('Mutation guestLogin');
     console.log('Input', input);
 
     return await this.memberService.guestLogin(input);

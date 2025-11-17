@@ -1,0 +1,16 @@
+import { Module } from '@nestjs/common';
+import { PartnerResolver } from './partner.resolver';
+import { PartnerService } from './partner.service';
+import { MongooseModule } from '@nestjs/mongoose';
+import PartnerSchema from 'apps/universal/src/schemas/Partner.model';
+import { AuthModule } from '../../auth/auth.module';
+
+@Module({
+  imports: [
+    MongooseModule.forFeature([{ name: 'Partner', schema: PartnerSchema }]),
+    AuthModule,
+  ],
+  providers: [PartnerResolver, PartnerService],
+  exports: [PartnerService],
+})
+export class PartnerModule {}

@@ -1,5 +1,5 @@
 import { Schema } from 'mongoose';
-import { UserRole } from '../libs/enums/user.enum';
+import { GuestStatus, UserRole } from '../libs/enums/user.enum';
 
 const PartnerSchema = new Schema(
   {
@@ -24,11 +24,16 @@ const PartnerSchema = new Schema(
       type: String,
       required: true,
     },
-    partnerType: {
+    userRole: {
       type: String,
       enum: UserRole,
       default: UserRole.HOTEL_OWNER,
       required: true,
+    },
+    memberStatus: {
+      type: String,
+      enum: GuestStatus,
+      default: GuestStatus.ACTIVE,
     },
   },
   { timestamps: true, collection: 'partners' },
