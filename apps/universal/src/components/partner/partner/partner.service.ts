@@ -13,11 +13,15 @@ import {
 } from 'apps/universal/src/libs/dto/partner/partner.input';
 import { Message } from 'apps/universal/src/libs/enums/common.enum';
 import { GuestStatus } from 'apps/universal/src/libs/enums/user.enum';
+import { PartnerPropertyInput } from 'apps/universal/src/libs/dto/partner/partnerProperty/partnerProperty.input';
+import { PartnerProperty } from 'apps/universal/src/libs/dto/partner/partnerProperty/partnerProperty';
 
 @Injectable()
 export class PartnerService {
   constructor(
     @InjectModel('Partner') private readonly partnerModel: Model<Partner>,
+    @InjectModel('PartnerPropertySchema')
+    private readonly partnerPropertyModel: Model<PartnerProperty>,
     private authService: AuthService,
   ) {}
 
@@ -60,6 +64,7 @@ export class PartnerService {
       .select('+partnerPassword')
       .exec();
 
+    console.log('partnerLogin response', response);
     if (!response || response.memberStatus === GuestStatus.DELETE) {
       throw new InternalServerErrorException(Message.NO_MEMBER_NICK);
     } else if (response.memberStatus === GuestStatus.BLOCK) {
@@ -74,5 +79,17 @@ export class PartnerService {
       throw new InternalServerErrorException(Message.WRONG_PASSWORD);
     response.accessToken = await this.authService.createToken(response);
     return response;
+  }
+
+  public async createPartnerProperty(
+    input: PartnerPropertyInput,
+  ): Promise<PartnerProperty> {
+    try {
+      const result = await this.partnerPropertyModel.create(input);
+      return result;
+    } catch (err) {
+      console.log('Error, Service.model', err.message);
+      throw new BadRequestException(Message.USED_MEMBER_NICK_OR_PHONE);
+    }
   }
 }

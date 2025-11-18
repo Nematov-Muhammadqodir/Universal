@@ -33,9 +33,9 @@ const PartnerPropertySchema = new Schema(
     breakfastIncluded: { type: Boolean, default: false, required: true },
     parkingIncluded: { type: Boolean, default: false, required: true },
     hotelStaffLanguages: {
-      type: String,
+      type: [String],
       enum: HotelStaffLanguages,
-      default: HotelStaffLanguages.ENGLISH,
+      default: [HotelStaffLanguages.ENGLISH],
       required: true,
     },
     checkInTimeFrom: { type: String, required: true },
