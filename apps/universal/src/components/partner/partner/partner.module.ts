@@ -5,6 +5,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import PartnerSchema from 'apps/universal/src/schemas/Partner.model';
 import { AuthModule } from '../../auth/auth.module';
 import PartnerPropertySchema from 'apps/universal/src/schemas/PartnerProperty';
+import { ViewModule } from '../../view/view.module';
 
 @Module({
   imports: [
@@ -13,6 +14,8 @@ import PartnerPropertySchema from 'apps/universal/src/schemas/PartnerProperty';
       { name: 'PartnerPropertySchema', schema: PartnerPropertySchema },
     ]),
     AuthModule,
+    ViewModule,
+    PartnerModule,
   ],
   providers: [PartnerResolver, PartnerService],
   exports: [PartnerService],

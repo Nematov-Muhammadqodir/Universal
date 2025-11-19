@@ -1,5 +1,8 @@
 import { Field, Int, ObjectType } from '@nestjs/graphql';
 import { ObjectId } from 'mongoose';
+import { PropertyStatus } from '../../../enums/property.enum';
+import { TotalCounter } from '../../user/user';
+import { Partner } from '../partner';
 
 @ObjectType()
 export class PartnerProperty {
@@ -30,6 +33,15 @@ export class PartnerProperty {
   @Field(() => Number)
   propertyStars: number;
 
+  @Field(() => Number)
+  propertyRooms: number;
+
+  @Field(() => Number)
+  propertyViews: number;
+
+  @Field(() => Number)
+  propertyComments: number;
+
   @Field(() => [String])
   propertyFacilities: string[];
 
@@ -44,6 +56,9 @@ export class PartnerProperty {
 
   @Field(() => String)
   checkInTimeFrom: string;
+
+  @Field(() => PropertyStatus)
+  propertyStatus: PropertyStatus;
 
   @Field(() => String)
   checkInTimeUntill: string;
@@ -65,4 +80,16 @@ export class PartnerProperty {
 
   @Field(() => Date)
   updatedAt: Date;
+
+  @Field(() => Partner, { nullable: true })
+  memberData?: Partner;
+}
+
+@ObjectType()
+export class PartnerProperties {
+  @Field(() => [PartnerProperty])
+  list: PartnerProperty[];
+
+  @Field(() => [TotalCounter], { nullable: true })
+  metaCounter: TotalCounter[];
 }

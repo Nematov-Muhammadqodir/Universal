@@ -2,6 +2,7 @@ import { Schema } from 'mongoose';
 import {
   HotelStaffLanguages,
   PropertyFacilities,
+  PropertyStatus,
   PropertyType,
 } from '../libs/enums/property.enum';
 
@@ -37,6 +38,25 @@ const PartnerPropertySchema = new Schema(
       enum: HotelStaffLanguages,
       default: [HotelStaffLanguages.ENGLISH],
       required: true,
+    },
+    propertyStatus: {
+      type: String,
+      enum: PropertyStatus,
+      default: PropertyStatus.ACTIVE,
+    },
+    propertyRooms: {
+      type: Number,
+      default: 0,
+      required: true,
+    },
+
+    propertyViews: {
+      type: Number,
+      default: 0,
+    },
+    propertyComments: {
+      type: Number,
+      default: 0,
     },
     checkInTimeFrom: { type: String, required: true },
     checkInTimeUntill: { type: String, required: true },

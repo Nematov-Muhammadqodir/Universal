@@ -53,3 +53,12 @@ export enum HotelStaffLanguages {
   SPANISH = 'Spanish',
 }
 registerEnumType(HotelStaffLanguages, { name: 'HotelStaffLanguages' });
+
+export enum PropertyStatus {
+  ACTIVE = 'ACTIVE',
+  SOLD = 'SOLD',
+  DELETE = 'DELETE',
+}
+registerEnumType(PropertyStatus, {
+  name: 'PropertyStatus',
+});

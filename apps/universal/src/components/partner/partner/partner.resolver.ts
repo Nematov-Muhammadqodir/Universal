@@ -1,4 +1,4 @@
-import { Args, Mutation, Resolver } from '@nestjs/graphql';
+import { Args, Mutation, Resolver, Query } from '@nestjs/graphql';
 import { PartnerService } from './partner.service';
 import { Partner } from 'apps/universal/src/libs/dto/partner/partner';
 import {
@@ -13,6 +13,8 @@ import { PartnerProperty } from 'apps/universal/src/libs/dto/partner/partnerProp
 import { PartnerPropertyInput } from 'apps/universal/src/libs/dto/partner/partnerProperty/partnerProperty.input';
 import { AuthMember } from '../../auth/decorators/authMember.decorator';
 import { ObjectId } from 'mongoose';
+import { WithoutGuard } from '../../auth/guards/without.guard';
+import { shapeIntoMongoObjectId } from 'apps/universal/src/libs/config';
 
 @Resolver()
 export class PartnerResolver {
@@ -49,5 +51,16 @@ export class PartnerResolver {
     input.partnerId = memberId;
 
     return await this.partnerService.createPartnerProperty(input);
+  }
+
+  @UseGuards(WithoutGuard)
+  @Query((returns) => PartnerProperty)
+  public async getPartnerProperty(
+    @Args('propertyId') input: string,
+    @AuthMember('_id') memberId: ObjectId,
+  ): Promise<PartnerProperty> {
+    console.log('Query: getPartnerProperty');
+    const propertyId = shapeIntoMongoObjectId(input);
+    return await this.partnerService.getPartnerProperty(memberId, propertyId);
   }
 }

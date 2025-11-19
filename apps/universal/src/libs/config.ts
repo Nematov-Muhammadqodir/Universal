@@ -16,3 +16,12 @@ export const shapeIntoMongoObjectId = (target: any) => {
   console.log('target id type', typeof target);
   return typeof target === 'string' ? new ObjectId(target) : target;
 };
+
+export const lookupVisit = {
+  $lookup: {
+    from: 'partners',
+    localField: 'visitedProperty.memberId',
+    foreignField: '_id',
+    as: 'visitedProperty.memberData',
+  },
+};
