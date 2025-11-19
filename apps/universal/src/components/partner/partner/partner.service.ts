@@ -20,11 +20,15 @@ import { PropertyStatus } from 'apps/universal/src/libs/enums/property.enum';
 import { ViewService } from '../../view/view.service';
 import { ViewGroup } from 'apps/universal/src/libs/enums/view.enum';
 import { shapeIntoMongoObjectId } from 'apps/universal/src/libs/config';
+import { PartnerPropertyRoom } from 'apps/universal/src/libs/dto/partner/partnerProperty/partnerPropertyRoom/partnerPropertyRoom';
+import { PartnerPropertyRoomInput } from 'apps/universal/src/libs/dto/partner/partnerProperty/partnerPropertyRoom/partnerPropertyRoom.input';
 
 @Injectable()
 export class PartnerService {
   constructor(
     @InjectModel('Partner') private readonly partnerModel: Model<Partner>,
+    @InjectModel('PartnerPropertyRoomSchema')
+    private readonly partnerPropertyRoomModel: Model<PartnerPropertyRoom>,
     @InjectModel('PartnerPropertySchema')
     private readonly partnerPropertyModel: Model<PartnerProperty>,
     private authService: AuthService,
@@ -158,6 +162,23 @@ export class PartnerService {
 
     targetProperty.memberData = await this.getPartner(targetProperty.partnerId);
     return targetProperty;
+  }
+
+  public async createPartnerPropertyRoom(
+    input: PartnerPropertyRoomInput,
+  ): Promise<PartnerPropertyRoom> {
+    try {
+      const exists = await this.partnerPropertyModel.findById(input.propertyId);
+      if (!exists) {
+        throw new BadRequestException(Message.WE_DO_NOT_HAVE_THIS_PROPERTY);
+      }
+
+      const result = await this.partnerPropertyRoomModel.create(input);
+      return result;
+    } catch (err) {
+      console.log('Error, Service.model', err.message);
+      throw new BadRequestException(Message.WE_DO_NOT_HAVE_THIS_PROPERTY);
+    }
   }
 
   public async propertyStatsEditor(

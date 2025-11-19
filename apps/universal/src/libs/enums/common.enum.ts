@@ -23,6 +23,7 @@ export enum Message {
   BLOCKED_USER = 'You have been blocked, contact restaurant!',
   TOKEN_CRAETION_FAILED = 'Token creation error!',
   PLEASE_ENTER_VALID_CREDENTIALS = 'Your email or phone number is not valid, please enter valid credentials!',
+  WE_DO_NOT_HAVE_THIS_PROPERTY = "We don't have this type of Property!",
 }
 
 export enum Direction {

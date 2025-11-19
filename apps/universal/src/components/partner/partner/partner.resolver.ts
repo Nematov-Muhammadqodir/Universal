@@ -15,6 +15,8 @@ import { AuthMember } from '../../auth/decorators/authMember.decorator';
 import { ObjectId } from 'mongoose';
 import { WithoutGuard } from '../../auth/guards/without.guard';
 import { shapeIntoMongoObjectId } from 'apps/universal/src/libs/config';
+import { PartnerPropertyRoomInput } from 'apps/universal/src/libs/dto/partner/partnerProperty/partnerPropertyRoom/partnerPropertyRoom.input';
+import { PartnerPropertyRoom } from 'apps/universal/src/libs/dto/partner/partnerProperty/partnerPropertyRoom/partnerPropertyRoom';
 
 @Resolver()
 export class PartnerResolver {
@@ -63,5 +65,17 @@ export class PartnerResolver {
     console.log('memberId', memberId);
     const propertyId = shapeIntoMongoObjectId(input);
     return await this.partnerService.getPartnerProperty(memberId, propertyId);
+  }
+
+  @Roles(UserRole.HOTEL_OWNER)
+  @UseGuards(RolesGuard)
+  @Mutation(() => PartnerPropertyRoom)
+  public async createPartnerPropertyRoom(
+    @Args('input') input: PartnerPropertyRoomInput,
+    @AuthMember('_id') memberId: ObjectId,
+  ): Promise<PartnerPropertyRoom> {
+    console.log('Mutation: createPartnerPropertyRoom');
+
+    return await this.partnerService.createPartnerPropertyRoom(input);
   }
 }

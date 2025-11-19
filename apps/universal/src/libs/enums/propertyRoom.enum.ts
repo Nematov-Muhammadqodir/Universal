@@ -14,6 +14,7 @@ export enum RoomTypes {
   DORMITORY_ROOM = 'Dormitory Room',
   BED_IN_DORMITORY = 'Bed in Dormitory',
 }
+registerEnumType(RoomTypes, { name: 'RoomTypes' });
 
 export enum BathroomFacilities {
   TOILET_PAPER = 'Toilet Paper',

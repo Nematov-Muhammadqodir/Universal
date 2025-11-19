@@ -9,3 +9,10 @@ export interface StatisticModifier {
   targetKey: string;
   modifier: number;
 }
+
+export interface IAvailableBeds {
+  single: number;
+  double: number;
+  king: number;
+  superKing: number;
+}
