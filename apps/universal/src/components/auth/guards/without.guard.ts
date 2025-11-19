@@ -11,11 +11,12 @@ export class WithoutGuard implements CanActivate {
     if (context.contextType === 'graphql') {
       const request = context.getArgByIndex(2).req,
         bearerToken = request.headers.authorization;
-
+      console.log('request context.getArgByIndex(2', request.headers);
       if (bearerToken) {
         try {
           const token = bearerToken.split(' ')[1],
             authMember = await this.authService.verifyToken(token);
+
           request.body.authMember = authMember;
         } catch (err) {
           request.body.authMember = null;
@@ -24,7 +25,7 @@ export class WithoutGuard implements CanActivate {
 
       console.log(
         'memberNick[without] =>',
-        request.body.authMember?.memberNick ?? 'none',
+        request.body.authMember?._id ?? 'none',
       );
       return true;
     }

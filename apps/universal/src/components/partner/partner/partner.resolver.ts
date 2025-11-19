@@ -60,6 +60,7 @@ export class PartnerResolver {
     @AuthMember('_id') memberId: ObjectId,
   ): Promise<PartnerProperty> {
     console.log('Query: getPartnerProperty');
+    console.log('memberId', memberId);
     const propertyId = shapeIntoMongoObjectId(input);
     return await this.partnerService.getPartnerProperty(memberId, propertyId);
   }
