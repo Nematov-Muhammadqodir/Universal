@@ -17,6 +17,7 @@ import { WithoutGuard } from '../../auth/guards/without.guard';
 import { shapeIntoMongoObjectId } from 'apps/universal/src/libs/config';
 import { PartnerPropertyRoomInput } from 'apps/universal/src/libs/dto/partner/partnerProperty/partnerPropertyRoom/partnerPropertyRoom.input';
 import { PartnerPropertyRoom } from 'apps/universal/src/libs/dto/partner/partnerProperty/partnerPropertyRoom/partnerPropertyRoom';
+import { PartnerPropertyUpdate } from 'apps/universal/src/libs/dto/partner/partnerProperty/partnerProperty.update';
 
 @Resolver()
 export class PartnerResolver {
@@ -53,6 +54,18 @@ export class PartnerResolver {
     input.partnerId = memberId;
 
     return await this.partnerService.createPartnerProperty(input);
+  }
+
+  @Roles(UserRole.HOTEL_OWNER)
+  @UseGuards(RolesGuard)
+  @Mutation(() => PartnerProperty)
+  public async updatePartnerProperty(
+    @Args('input') input: PartnerPropertyUpdate,
+    @AuthMember('_id') memberId: ObjectId,
+  ): Promise<PartnerProperty> {
+    console.log('Mutation: PartnerProperty');
+
+    return await this.partnerService.updatePartnerProperty(input, memberId);
   }
 
   @UseGuards(WithoutGuard)

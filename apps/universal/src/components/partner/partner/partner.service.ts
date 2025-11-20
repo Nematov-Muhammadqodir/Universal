@@ -22,6 +22,7 @@ import { ViewGroup } from 'apps/universal/src/libs/enums/view.enum';
 import { shapeIntoMongoObjectId } from 'apps/universal/src/libs/config';
 import { PartnerPropertyRoom } from 'apps/universal/src/libs/dto/partner/partnerProperty/partnerPropertyRoom/partnerPropertyRoom';
 import { PartnerPropertyRoomInput } from 'apps/universal/src/libs/dto/partner/partnerProperty/partnerPropertyRoom/partnerPropertyRoom.input';
+import { PartnerPropertyUpdate } from 'apps/universal/src/libs/dto/partner/partnerProperty/partnerProperty.update';
 
 @Injectable()
 export class PartnerService {
@@ -113,6 +114,23 @@ export class PartnerService {
     } catch (err) {
       console.log('Error, Service.model', err.message);
       throw new BadRequestException(Message.USED_MEMBER_NICK_OR_PHONE);
+    }
+  }
+
+  public async updatePartnerProperty(
+    input: PartnerPropertyUpdate,
+    memberId: ObjectId,
+  ): Promise<PartnerProperty> {
+    try {
+      const result = await this.partnerPropertyModel.findByIdAndUpdate(
+        { _id: input._id, partnerId: memberId },
+        { propertyImages: input.propertyImages },
+        { new: true },
+      );
+      return result;
+    } catch (err) {
+      console.log('Error, Service.model', err.message);
+      throw new BadRequestException(Message.UPDATE_FAILED);
     }
   }
 

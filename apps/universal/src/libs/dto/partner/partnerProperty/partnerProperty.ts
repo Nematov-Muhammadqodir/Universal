@@ -63,6 +63,9 @@ export class PartnerProperty {
   @Field(() => String)
   checkInTimeUntill: string;
 
+  @Field(() => [String])
+  propertyImages: string[];
+
   @Field(() => String)
   checkOutTimeFrom: string;
 

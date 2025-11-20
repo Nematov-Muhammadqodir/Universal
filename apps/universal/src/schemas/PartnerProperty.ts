@@ -39,6 +39,10 @@ const PartnerPropertySchema = new Schema(
       default: [HotelStaffLanguages.ENGLISH],
       required: true,
     },
+    propertyImages: {
+      type: [String],
+      default: [],
+    },
     propertyStatus: {
       type: String,
       enum: PropertyStatus,
