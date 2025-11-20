@@ -7,7 +7,6 @@ import {
   RoomNames,
   RoomTypes,
 } from 'apps/universal/src/libs/enums/propertyRoom.enum';
-import { IAvailableBeds } from 'apps/universal/src/libs/types/common';
 
 @InputType()
 export class AvailableBedsInput {

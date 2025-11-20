@@ -164,6 +164,21 @@ export class PartnerService {
     return targetProperty;
   }
 
+  public async getPartnerPropertyByHotelOwner(
+    memberId: ObjectId,
+    partnerId: ObjectId,
+  ): Promise<PartnerProperty> {
+    const targetProperty: PartnerProperty = await this.partnerPropertyModel
+      .findOne({ partnerId: partnerId })
+      .lean()
+      .exec();
+    if (!targetProperty)
+      throw new InternalServerErrorException(Message.NO_DATA_FOUND);
+
+    targetProperty.memberData = await this.getPartner(targetProperty.partnerId);
+    return targetProperty;
+  }
+
   public async createPartnerPropertyRoom(
     input: PartnerPropertyRoomInput,
   ): Promise<PartnerPropertyRoom> {
