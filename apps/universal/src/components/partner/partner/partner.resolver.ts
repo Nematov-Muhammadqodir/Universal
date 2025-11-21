@@ -9,9 +9,13 @@ import { Roles } from '../../auth/decorators/roles.decorator';
 import { UserRole } from 'apps/universal/src/libs/enums/user.enum';
 import { UseGuards } from '@nestjs/common';
 import { RolesGuard } from '../../auth/guards/roles.guard';
-import { PartnerProperty } from 'apps/universal/src/libs/dto/partner/partnerProperty/partnerProperty';
+import {
+  PartnerProperties,
+  PartnerProperty,
+} from 'apps/universal/src/libs/dto/partner/partnerProperty/partnerProperty';
 import {
   AvailablePropertiesSearchInput,
+  OrdinaryInquery,
   PartnerPropertyInput,
 } from 'apps/universal/src/libs/dto/partner/partnerProperty/partnerProperty.input';
 import { AuthMember } from '../../auth/decorators/authMember.decorator';
@@ -131,5 +135,15 @@ export class PartnerResolver {
     console.log('Mutation: updatePartnerPropertyRoom');
 
     return await this.partnerService.updatePartnerPropertyRoom(input, memberId);
+  }
+
+  @UseGuards(AuthGuard)
+  @Query((returns) => PartnerProperties)
+  public async getVisitedProperties(
+    @Args('input') input: OrdinaryInquery,
+    @AuthMember('_id') memberId: ObjectId,
+  ): Promise<PartnerProperties> {
+    console.log('Query: getVisitedProperties');
+    return await this.partnerService.getVisitedProperties(memberId, input);
   }
 }

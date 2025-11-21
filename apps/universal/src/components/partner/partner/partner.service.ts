@@ -15,9 +15,13 @@ import { Message } from 'apps/universal/src/libs/enums/common.enum';
 import { GuestStatus } from 'apps/universal/src/libs/enums/user.enum';
 import {
   AvailablePropertiesSearchInput,
+  OrdinaryInquery,
   PartnerPropertyInput,
 } from 'apps/universal/src/libs/dto/partner/partnerProperty/partnerProperty.input';
-import { PartnerProperty } from 'apps/universal/src/libs/dto/partner/partnerProperty/partnerProperty';
+import {
+  PartnerProperties,
+  PartnerProperty,
+} from 'apps/universal/src/libs/dto/partner/partnerProperty/partnerProperty';
 import { StatisticModifier, T } from 'apps/universal/src/libs/types/common';
 import { PropertyStatus } from 'apps/universal/src/libs/enums/property.enum';
 import { ViewService } from '../../view/view.service';
@@ -395,6 +399,14 @@ export class PartnerService {
       console.log('Error, Service.model', err.message);
       throw new BadRequestException(err.message || Message.UPDATE_FAILED);
     }
+  }
+
+  public async getVisitedProperties(
+    memberId: ObjectId,
+    input: OrdinaryInquery,
+  ): Promise<PartnerProperties> {
+    console.log('memberId', memberId);
+    return await this.viewService.getVisitedProperties(memberId, input);
   }
 
   public async propertyStatsEditor(

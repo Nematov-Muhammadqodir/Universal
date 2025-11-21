@@ -42,6 +42,7 @@ export class ViewService {
   ): Promise<PartnerProperties> {
     const { page, limit } = input;
     const match: T = { viewGroup: ViewGroup.PROPERTY, memberId: memberId };
+    console.log('match', match);
 
     const data = await this.viewModel.aggregate([
       { $match: match },

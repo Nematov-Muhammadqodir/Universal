@@ -20,7 +20,7 @@ export const shapeIntoMongoObjectId = (target: any) => {
 export const lookupVisit = {
   $lookup: {
     from: 'partners',
-    localField: 'visitedProperty.memberId',
+    localField: 'visitedProperty.partnerId',
     foreignField: '_id',
     as: 'visitedProperty.memberData',
   },
