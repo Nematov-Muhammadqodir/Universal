@@ -13,7 +13,10 @@ import {
 } from 'apps/universal/src/libs/dto/partner/partner.input';
 import { Message } from 'apps/universal/src/libs/enums/common.enum';
 import { GuestStatus } from 'apps/universal/src/libs/enums/user.enum';
-import { PartnerPropertyInput } from 'apps/universal/src/libs/dto/partner/partnerProperty/partnerProperty.input';
+import {
+  AvailablePropertiesSearchInput,
+  PartnerPropertyInput,
+} from 'apps/universal/src/libs/dto/partner/partnerProperty/partnerProperty.input';
 import { PartnerProperty } from 'apps/universal/src/libs/dto/partner/partnerProperty/partnerProperty';
 import { StatisticModifier, T } from 'apps/universal/src/libs/types/common';
 import { PropertyStatus } from 'apps/universal/src/libs/enums/property.enum';
@@ -143,12 +146,36 @@ export class PartnerService {
       _id: propertyId,
       propertyStatus: PropertyStatus.ACTIVE,
     };
-    const targetProperty: PartnerProperty = await this.partnerPropertyModel
+    const targetProperty: any = await this.partnerPropertyModel // ✅ Change to 'any'
       .findOne(search)
       .lean()
       .exec();
+
     if (!targetProperty)
       throw new InternalServerErrorException(Message.NO_DATA_FOUND);
+
+    // ✅ Fetch actual rooms for this property
+    const rooms = await this.partnerPropertyRoomModel
+      .find({
+        propertyId: propertyId,
+      })
+      .lean()
+      .exec();
+
+    // ✅ Transform rooms to match PropertyRoom type
+    targetProperty.propertyRooms = rooms.map((room) => ({
+      roomId: room._id.toString(),
+      roomType: room.roomType,
+      roomPricePerNight: room.roomPricePerNight,
+      numberOfGuestsCanStay: room.numberOfGuestsCanStay,
+      availableBeds: room.availableBeds,
+      reservedDates: room.reservedDates || [],
+      roomFacilities: room.roomFacilities,
+      availableBathroomFacilities: room.availableBathroomFacilities,
+      isBathroomPrivate: room.isBathroomPrivate,
+      isSmokingAllowed: room.isSmokingAllowed,
+      roomName: room.roomName,
+    }));
 
     if (memberId) {
       const viewInput = {
@@ -167,32 +194,116 @@ export class PartnerService {
 
         targetProperty.propertyViews++;
       }
-
-      // const likeInput = {
-      //   memberId: memberId,
-      //   likeRefId: propertyId,
-      //   likeGroup: LikeGroup.MEMBER,
-      // };
-
-      // targetProperty.meLiked =
-      //   await this.likeService.checkLikeExistance(likeInput);
-      //Like logic
     }
 
     targetProperty.memberData = await this.getPartner(targetProperty.partnerId);
     return targetProperty;
   }
 
+  public async getAllAvailableProperties(
+    input: AvailablePropertiesSearchInput,
+  ): Promise<PartnerProperty[]> {
+    const { propertyRegion, from, until, adults, children } = input;
+    const totalGuests = adults + children;
+
+    // Convert to JS Date if needed
+    const fromDate = new Date(from);
+    const untilDate = new Date(until);
+
+    // 1️⃣ Find rooms that match criteria
+    const availableRooms = await this.partnerPropertyRoomModel.aggregate([
+      {
+        $match: {
+          roomPropertyLocation: propertyRegion,
+          numberOfGuestsCanStay: { $gte: totalGuests },
+          reservedDates: {
+            $not: {
+              $elemMatch: {
+                from: { $lte: untilDate },
+                until: { $gte: fromDate },
+              },
+            },
+          },
+        },
+      },
+      // 2️⃣ Join with property data
+      {
+        $lookup: {
+          from: 'partnersProperties',
+          localField: 'propertyId',
+          foreignField: '_id',
+          as: 'property',
+        },
+      },
+      { $unwind: '$property' },
+    ]);
+
+    console.log('availableRooms', availableRooms);
+
+    // 3️⃣ Merge rooms by property
+    const propertiesMap: Record<string, any> = {};
+
+    availableRooms.forEach((room) => {
+      const propId = room.property._id.toString();
+      if (!propertiesMap[propId]) {
+        propertiesMap[propId] = {
+          ...room.property,
+          propertyRooms: [],
+        };
+      }
+
+      propertiesMap[propId].propertyRooms.push({
+        roomId: room._id,
+        roomType: room.roomType,
+        roomPricePerNight: room.roomPricePerNight,
+        numberOfGuestsCanStay: room.numberOfGuestsCanStay,
+        availableBeds: room.availableBeds,
+        reservedDates: room.reservedDates,
+        roomFacilities: room.roomFacilities,
+        availableBathroomFacilities: room.availableBathroomFacilities,
+        isBathroomPrivate: room.isBathroomPrivate,
+        isSmokingAllowed: room.isSmokingAllowed,
+        roomName: room.roomName,
+      });
+    });
+
+    // ✅ Return the transformed properties instead of raw availableRooms
+    return Object.values(propertiesMap);
+  }
+
   public async getPartnerPropertyByHotelOwner(
     memberId: ObjectId,
     partnerId: ObjectId,
   ): Promise<PartnerProperty> {
-    const targetProperty: PartnerProperty = await this.partnerPropertyModel
+    const targetProperty: any = await this.partnerPropertyModel
       .findOne({ partnerId: partnerId })
       .lean()
       .exec();
     if (!targetProperty)
       throw new InternalServerErrorException(Message.NO_DATA_FOUND);
+
+    // ✅ Fetch actual rooms for this property
+    const rooms = await this.partnerPropertyRoomModel
+      .find({
+        propertyId: targetProperty._id,
+      })
+      .lean()
+      .exec();
+
+    // ✅ Transform rooms to match PropertyRoom type
+    targetProperty.propertyRooms = rooms.map((room) => ({
+      roomId: room._id.toString(),
+      roomType: room.roomType,
+      roomPricePerNight: room.roomPricePerNight,
+      numberOfGuestsCanStay: room.numberOfGuestsCanStay,
+      availableBeds: room.availableBeds,
+      reservedDates: room.reservedDates || [],
+      roomFacilities: room.roomFacilities,
+      availableBathroomFacilities: room.availableBathroomFacilities,
+      isBathroomPrivate: room.isBathroomPrivate,
+      isSmokingAllowed: room.isSmokingAllowed,
+      roomName: room.roomName,
+    }));
 
     targetProperty.memberData = await this.getPartner(targetProperty.partnerId);
     return targetProperty;

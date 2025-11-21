@@ -93,3 +93,21 @@ export class OrdinaryInquery {
   @Field(() => Int)
   limit: number;
 }
+
+@InputType()
+export class AvailablePropertiesSearchInput {
+  @Field(() => String)
+  propertyRegion: string;
+
+  @Field(() => Date)
+  from: Date;
+
+  @Field(() => Date)
+  until: Date;
+
+  @Field(() => Int)
+  adults: number;
+
+  @Field(() => Int)
+  children: number;
+}

@@ -10,7 +10,10 @@ import { UserRole } from 'apps/universal/src/libs/enums/user.enum';
 import { UseGuards } from '@nestjs/common';
 import { RolesGuard } from '../../auth/guards/roles.guard';
 import { PartnerProperty } from 'apps/universal/src/libs/dto/partner/partnerProperty/partnerProperty';
-import { PartnerPropertyInput } from 'apps/universal/src/libs/dto/partner/partnerProperty/partnerProperty.input';
+import {
+  AvailablePropertiesSearchInput,
+  PartnerPropertyInput,
+} from 'apps/universal/src/libs/dto/partner/partnerProperty/partnerProperty.input';
 import { AuthMember } from '../../auth/decorators/authMember.decorator';
 import { ObjectId } from 'mongoose';
 import { WithoutGuard } from '../../auth/guards/without.guard';
@@ -80,6 +83,16 @@ export class PartnerResolver {
     console.log('memberId', memberId);
     const propertyId = shapeIntoMongoObjectId(input);
     return await this.partnerService.getPartnerProperty(memberId, propertyId);
+  }
+
+  @UseGuards(WithoutGuard)
+  @Query(() => [PartnerProperty])
+  public async getAllAvailableProperties(
+    @Args('input') input: AvailablePropertiesSearchInput,
+  ): Promise<PartnerProperty[]> {
+    console.log('Query: getAllAvailableProperties');
+
+    return await this.partnerService.getAllAvailableProperties(input);
   }
 
   @UseGuards(WithoutGuard)

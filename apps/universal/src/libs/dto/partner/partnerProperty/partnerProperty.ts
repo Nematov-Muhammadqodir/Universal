@@ -3,6 +3,46 @@ import { ObjectId } from 'mongoose';
 import { PropertyStatus } from '../../../enums/property.enum';
 import { TotalCounter } from '../../user/user';
 import { Partner } from '../partner';
+import {
+  AvailableBeds,
+  ReservedDate,
+} from './partnerPropertyRoom/partnerPropertyRoom';
+
+@ObjectType()
+export class PropertyRoom {
+  @Field(() => String)
+  roomId: string;
+
+  @Field(() => String)
+  roomType: string;
+
+  @Field(() => String)
+  roomPricePerNight: string;
+
+  @Field(() => Int)
+  numberOfGuestsCanStay: number;
+
+  @Field(() => AvailableBeds)
+  availableBeds: AvailableBeds;
+
+  @Field(() => [ReservedDate])
+  reservedDates: ReservedDate[];
+
+  @Field(() => [String])
+  roomFacilities: string[];
+
+  @Field(() => [String])
+  availableBathroomFacilities: string[];
+
+  @Field(() => Boolean)
+  isBathroomPrivate: boolean;
+
+  @Field(() => Boolean)
+  isSmokingAllowed: boolean;
+
+  @Field(() => String)
+  roomName: string;
+}
 
 @ObjectType()
 export class PartnerProperty {
@@ -33,8 +73,8 @@ export class PartnerProperty {
   @Field(() => Number)
   propertyStars: number;
 
-  @Field(() => Number)
-  propertyRooms: number;
+  @Field(() => [PropertyRoom])
+  propertyRooms: PropertyRoom[];
 
   @Field(() => Number)
   propertyViews: number;
