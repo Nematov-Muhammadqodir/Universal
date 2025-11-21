@@ -205,27 +205,38 @@ export class PartnerService {
   ): Promise<PartnerProperty[]> {
     const { propertyRegion, from, until, adults, children, page, limit } =
       input;
-    const totalGuests = adults + children;
 
-    // Convert to JS Date if needed
-    const fromDate = new Date(from);
-    const untilDate = new Date(until);
+    const matchConditions: any = {};
 
-    // 1️⃣ Find rooms that match criteria
-    const availableRooms = await this.partnerPropertyRoomModel.aggregate([
-      {
-        $match: {
-          roomPropertyLocation: propertyRegion,
-          numberOfGuestsCanStay: { $gte: totalGuests },
-          reservedDates: {
-            $not: {
-              $elemMatch: {
-                from: { $lte: untilDate },
-                until: { $gte: fromDate },
-              },
-            },
+    if (propertyRegion) {
+      matchConditions.roomPropertyLocation = propertyRegion;
+    }
+
+    if (adults !== undefined || children !== undefined) {
+      const totalGuests = (adults || 0) + (children || 0);
+      if (totalGuests > 0) {
+        matchConditions.numberOfGuestsCanStay = { $gte: totalGuests };
+      }
+    }
+
+    if (from && until) {
+      const fromDate = new Date(from);
+      const untilDate = new Date(until);
+
+      matchConditions.reservedDates = {
+        $not: {
+          $elemMatch: {
+            from: { $lte: untilDate },
+            until: { $gte: fromDate },
           },
         },
+      };
+    }
+
+    // 1️⃣ Find rooms that match criteria (or all rooms if no filters)
+    const availableRooms = await this.partnerPropertyRoomModel.aggregate([
+      {
+        $match: matchConditions,
       },
       // 2️⃣ Join with property data
       {
@@ -237,11 +248,17 @@ export class PartnerService {
         },
       },
       { $unwind: '$property' },
+      // 3️⃣ Only include active properties
+      {
+        $match: {
+          'property.propertyStatus': 'ACTIVE',
+        },
+      },
     ]);
 
     console.log('availableRooms', availableRooms);
 
-    // 3️⃣ Merge rooms by property
+    // 4️⃣ Merge rooms by property
     const propertiesMap: Record<string, any> = {};
 
     availableRooms.forEach((room) => {

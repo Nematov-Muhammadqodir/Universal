@@ -96,20 +96,20 @@ export class OrdinaryInquery {
 
 @InputType()
 export class AvailablePropertiesSearchInput {
-  @Field(() => String)
-  propertyRegion: string;
+  @Field(() => String, { nullable: true })
+  propertyRegion?: string;
 
-  @Field(() => Date)
-  from: Date;
+  @Field(() => Date, { nullable: true })
+  from?: Date;
 
-  @Field(() => Date)
-  until: Date;
+  @Field(() => Date, { nullable: true })
+  until?: Date;
 
-  @Field(() => Int)
-  adults: number;
+  @Field(() => Int, { nullable: true })
+  adults?: number;
 
-  @Field(() => Int)
-  children: number;
+  @Field(() => Int, { nullable: true })
+  children?: number;
 
   @Field(() => Int, { defaultValue: 1 })
   page: number;
