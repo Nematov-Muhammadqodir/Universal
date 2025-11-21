@@ -110,4 +110,10 @@ export class AvailablePropertiesSearchInput {
 
   @Field(() => Int)
   children: number;
+
+  @Field(() => Int, { defaultValue: 1 })
+  page: number;
+
+  @Field(() => Int, { defaultValue: 6 })
+  limit: number;
 }

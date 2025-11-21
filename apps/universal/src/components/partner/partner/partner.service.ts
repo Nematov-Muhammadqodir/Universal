@@ -203,7 +203,8 @@ export class PartnerService {
   public async getAllAvailableProperties(
     input: AvailablePropertiesSearchInput,
   ): Promise<PartnerProperty[]> {
-    const { propertyRegion, from, until, adults, children } = input;
+    const { propertyRegion, from, until, adults, children, page, limit } =
+      input;
     const totalGuests = adults + children;
 
     // Convert to JS Date if needed
@@ -267,8 +268,14 @@ export class PartnerService {
       });
     });
 
-    // ✅ Return the transformed properties instead of raw availableRooms
-    return Object.values(propertiesMap);
+    // ✅ Get all properties
+    const allProperties = Object.values(propertiesMap);
+
+    // ✅ Apply pagination
+    const skip = (page - 1) * limit;
+    const paginatedProperties = allProperties.slice(skip, skip + limit);
+
+    return paginatedProperties;
   }
 
   public async getPartnerPropertyByHotelOwner(
