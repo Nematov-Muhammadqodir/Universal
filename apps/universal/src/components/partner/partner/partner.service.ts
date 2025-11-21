@@ -23,6 +23,7 @@ import { shapeIntoMongoObjectId } from 'apps/universal/src/libs/config';
 import { PartnerPropertyRoom } from 'apps/universal/src/libs/dto/partner/partnerProperty/partnerPropertyRoom/partnerPropertyRoom';
 import { PartnerPropertyRoomInput } from 'apps/universal/src/libs/dto/partner/partnerProperty/partnerPropertyRoom/partnerPropertyRoom.input';
 import { PartnerPropertyUpdate } from 'apps/universal/src/libs/dto/partner/partnerProperty/partnerProperty.update';
+import { PartnerPropertyRoomUpdate } from 'apps/universal/src/libs/dto/partner/partnerProperty/partnerPropertyRoom/partnerPropertyRoom.update';
 
 @Injectable()
 export class PartnerService {
@@ -204,6 +205,8 @@ export class PartnerService {
       const exists = await this.partnerPropertyModel.findById(input.propertyId);
       if (!exists) {
         throw new BadRequestException(Message.WE_DO_NOT_HAVE_THIS_PROPERTY);
+      } else {
+        input.roomPropertyLocation = exists.propertyRegion;
       }
 
       const result = await this.partnerPropertyRoomModel.create(input);
@@ -211,6 +214,51 @@ export class PartnerService {
     } catch (err) {
       console.log('Error, Service.model', err.message);
       throw new BadRequestException(Message.WE_DO_NOT_HAVE_THIS_PROPERTY);
+    }
+  }
+
+  public async updatePartnerPropertyRoom(
+    input: PartnerPropertyRoomUpdate,
+    memberId: ObjectId,
+  ): Promise<PartnerPropertyRoom> {
+    try {
+      const room = await this.partnerPropertyRoomModel.findById(input._id);
+      if (!room) throw new BadRequestException('Room not found');
+
+      const existingReservedDates = room.reservedDates || [];
+
+      const newReservedDates = input.reservedDates?.map((date) => ({
+        ...date,
+        userId: memberId.toString(),
+      }));
+
+      if (!newReservedDates || newReservedDates.length === 0)
+        throw new BadRequestException('No new reservations provided');
+
+      for (const newDate of newReservedDates) {
+        const overlap = existingReservedDates.some(
+          (reserved) =>
+            reserved.from <= newDate.until && reserved.until >= newDate.from,
+        );
+        if (overlap) {
+          throw new BadRequestException(
+            `Room is not available from ${newDate.from.toISOString()} to ${newDate.until.toISOString()}`,
+          );
+        }
+      }
+
+      const result = await this.partnerPropertyRoomModel.findByIdAndUpdate(
+        input._id,
+        {
+          $push: { reservedDates: { $each: newReservedDates } },
+        },
+        { new: true },
+      );
+
+      return result;
+    } catch (err) {
+      console.log('Error, Service.model', err.message);
+      throw new BadRequestException(err.message || Message.UPDATE_FAILED);
     }
   }
 

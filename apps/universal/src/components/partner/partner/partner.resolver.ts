@@ -18,6 +18,8 @@ import { shapeIntoMongoObjectId } from 'apps/universal/src/libs/config';
 import { PartnerPropertyRoomInput } from 'apps/universal/src/libs/dto/partner/partnerProperty/partnerPropertyRoom/partnerPropertyRoom.input';
 import { PartnerPropertyRoom } from 'apps/universal/src/libs/dto/partner/partnerProperty/partnerPropertyRoom/partnerPropertyRoom';
 import { PartnerPropertyUpdate } from 'apps/universal/src/libs/dto/partner/partnerProperty/partnerProperty.update';
+import { AuthGuard } from '../../auth/guards/auth.guard';
+import { PartnerPropertyRoomUpdate } from 'apps/universal/src/libs/dto/partner/partnerProperty/partnerPropertyRoom/partnerPropertyRoom.update';
 
 @Resolver()
 export class PartnerResolver {
@@ -105,5 +107,16 @@ export class PartnerResolver {
     console.log('Mutation: createPartnerPropertyRoom');
 
     return await this.partnerService.createPartnerPropertyRoom(input);
+  }
+
+  @UseGuards(AuthGuard)
+  @Mutation(() => PartnerPropertyRoom)
+  public async updatePartnerPropertyRoom(
+    @Args('input') input: PartnerPropertyRoomUpdate,
+    @AuthMember('_id') memberId: ObjectId,
+  ): Promise<PartnerPropertyRoom> {
+    console.log('Mutation: updatePartnerPropertyRoom');
+
+    return await this.partnerService.updatePartnerPropertyRoom(input, memberId);
   }
 }

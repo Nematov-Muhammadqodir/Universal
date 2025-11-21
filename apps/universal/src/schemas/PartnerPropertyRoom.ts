@@ -40,8 +40,26 @@ const PartnerPropertyRoomSchema = new Schema(
       default: [],
       required: true,
     },
+    reservedDates: [
+      {
+        userId: {
+          type: Schema.Types.ObjectId,
+          ref: 'users',
+          required: true,
+        },
+        from: {
+          type: Date,
+          required: true,
+        },
+        until: {
+          type: Date,
+          required: true,
+        },
+      },
+    ],
     roomName: { type: String, enum: RoomNames, default: '', required: true },
     roomPricePerNight: { type: String, required: true },
+    roomPropertyLocation: { type: String, required: true },
   },
   { timestamps: true, collection: 'partnerPropertyRooms' },
 );

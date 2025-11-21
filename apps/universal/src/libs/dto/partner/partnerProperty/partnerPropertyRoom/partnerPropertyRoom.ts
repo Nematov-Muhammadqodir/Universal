@@ -22,6 +22,18 @@ export class AvailableBeds {
 }
 
 @ObjectType()
+export class ReservedDate {
+  @Field(() => String)
+  userId: string;
+
+  @Field(() => Date)
+  from: Date;
+
+  @Field(() => Date)
+  until: Date;
+}
+
+@ObjectType()
 export class PartnerPropertyRoom {
   @Field(() => String)
   _id: string;
@@ -53,11 +65,17 @@ export class PartnerPropertyRoom {
   @Field(() => [RoomFacilities])
   roomFacilities: RoomFacilities[];
 
+  @Field(() => [ReservedDate])
+  reservedDates: ReservedDate[];
+
   @Field(() => RoomNames)
   roomName: RoomNames;
 
   @Field(() => String)
   roomPricePerNight: string;
+
+  @Field(() => String, { nullable: true })
+  roomPropertyLocation?: string;
 
   @Field(() => Date)
   createdAt: Date;

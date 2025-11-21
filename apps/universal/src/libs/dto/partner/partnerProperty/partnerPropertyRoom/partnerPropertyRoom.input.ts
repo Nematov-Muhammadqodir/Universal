@@ -65,6 +65,10 @@ export class PartnerPropertyRoomInput {
   @Field(() => RoomNames)
   roomName: RoomNames;
 
+  @IsOptional()
+  @Field(() => String, { nullable: true })
+  roomPropertyLocation?: string;
+
   @IsNotEmpty()
   @Field(() => String)
   roomPricePerNight: string;
