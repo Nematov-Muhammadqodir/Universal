@@ -5,6 +5,7 @@ import {
   PropertyStatus,
   PropertyType,
 } from '../libs/enums/property.enum';
+import PartnerPropertyRoomSchema from './PartnerPropertyRoom';
 
 const PartnerPropertySchema = new Schema(
   {
@@ -49,9 +50,8 @@ const PartnerPropertySchema = new Schema(
       default: PropertyStatus.ACTIVE,
     },
     propertyRooms: {
-      type: Number,
-      default: 0,
-      required: true,
+      type: [PartnerPropertyRoomSchema],
+      default: [],
     },
 
     propertyViews: {

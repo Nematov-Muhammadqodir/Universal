@@ -213,7 +213,9 @@ export class PartnerService {
     const matchConditions: any = {};
 
     if (propertyRegion) {
-      matchConditions.roomPropertyLocation = propertyRegion;
+      matchConditions.roomPropertyLocation = {
+        $regex: new RegExp(propertyRegion, 'i'), // "i" for case-insensitive
+      };
     }
 
     if (adults !== undefined || children !== undefined) {
