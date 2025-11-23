@@ -208,22 +208,78 @@ export class PartnerService {
   public async getAllAvailableProperties(
     input: AvailablePropertiesSearchInput,
   ): Promise<PartnerProperty[]> {
-    const { propertyRegion, from, until, adults, children, page, limit } =
-      input;
+    const {
+      propertyRegion,
+      propertyCity,
+      propertyType,
+      propertyStars,
+      breakfastIncluded,
+      parkingIncluded,
+      allowChildren,
+      allowPets,
+      from,
+      until,
+      adults,
+      children,
+      page,
+      limit,
+    } = input;
 
+    // ✅ If any property-level filter exists, query partnerPropertyModel
+    const isPropertyLevelFilter =
+      propertyType ||
+      propertyCity ||
+      propertyStars !== undefined ||
+      breakfastIncluded !== undefined ||
+      parkingIncluded !== undefined ||
+      allowChildren !== undefined ||
+      allowPets !== undefined;
+
+    console.log('isPropertyLevelFilter', isPropertyLevelFilter);
+
+    if (isPropertyLevelFilter) {
+      const match: any = { propertyStatus: PropertyStatus.ACTIVE };
+
+      if (propertyType) match.propertyType = propertyType;
+      if (propertyCity) match.propertyCity = propertyCity;
+      if (propertyStars !== undefined)
+        match.propertyStars = { $gte: propertyStars };
+      if (breakfastIncluded !== undefined)
+        match.breakfastIncluded = breakfastIncluded;
+      if (parkingIncluded !== undefined)
+        match.parkingIncluded = parkingIncluded;
+      if (allowChildren !== undefined) match.allowChildren = allowChildren;
+      if (allowPets !== undefined) match.allowPets = allowPets;
+      if (propertyRegion)
+        match.propertyRegion = { $regex: new RegExp(propertyRegion, 'i') };
+
+      const result = await this.partnerPropertyModel.aggregate([
+        { $match: match },
+        {
+          $facet: {
+            list: [{ $skip: (page - 1) * limit }, { $limit: limit }],
+            metaCounter: [{ $count: 'total' }],
+          },
+        },
+      ]);
+
+      if (!result.length) return [];
+      return result[0].list;
+    }
+
+    // ✅ Otherwise, use room-level aggregation (region, dates, guests)
     const matchConditions: any = {};
 
     if (propertyRegion) {
       matchConditions.roomPropertyLocation = {
-        $regex: new RegExp(propertyRegion, 'i'), // "i" for case-insensitive
+        $regex: new RegExp(propertyRegion, 'i'),
       };
     }
 
     if (adults !== undefined || children !== undefined) {
       const totalGuests = (adults || 0) + (children || 0);
-      if (totalGuests > 0) {
+      if (totalGuests > 0)
         matchConditions.numberOfGuestsCanStay = { $gte: totalGuests };
-      }
     }
 
     if (from && until) {
@@ -240,12 +296,9 @@ export class PartnerService {
       };
     }
 
-    // 1️⃣ Find rooms that match criteria (or all rooms if no filters)
+    // Aggregate rooms
     const availableRooms = await this.partnerPropertyRoomModel.aggregate([
-      {
-        $match: matchConditions,
-      },
-      // 2️⃣ Join with property data
+      { $match: matchConditions },
       {
         $lookup: {
           from: 'partnersProperties',
@@ -255,26 +308,33 @@ export class PartnerService {
         },
       },
       { $unwind: '$property' },
-      // 3️⃣ Only include active properties
       {
         $match: {
-          'property.propertyStatus': 'ACTIVE',
+          'property.propertyStatus': PropertyStatus.ACTIVE,
+          ...(propertyStars !== undefined && {
+            'property.propertyStars': { $gte: propertyStars },
+          }),
+          ...(breakfastIncluded !== undefined && {
+            'property.breakfastIncluded': breakfastIncluded,
+          }),
+          ...(parkingIncluded !== undefined && {
+            'property.parkingIncluded': parkingIncluded,
+          }),
+          ...(allowChildren !== undefined && {
+            'property.allowChildren': allowChildren,
+          }),
+          ...(allowPets !== undefined && { 'property.allowPets': allowPets }),
         },
       },
     ]);
 
-    console.log('availableRooms', availableRooms);
-
-    // 4️⃣ Merge rooms by property
+    // Merge rooms by property
     const propertiesMap: Record<string, any> = {};
 
     availableRooms.forEach((room) => {
       const propId = room.property._id.toString();
       if (!propertiesMap[propId]) {
-        propertiesMap[propId] = {
-          ...room.property,
-          propertyRooms: [],
-        };
+        propertiesMap[propId] = { ...room.property, propertyRooms: [] };
       }
 
       propertiesMap[propId].propertyRooms.push({
@@ -292,14 +352,11 @@ export class PartnerService {
       });
     });
 
-    // ✅ Get all properties
     const allProperties = Object.values(propertiesMap);
 
-    // ✅ Apply pagination
+    // Pagination
     const skip = (page - 1) * limit;
-    const paginatedProperties = allProperties.slice(skip, skip + limit);
-
-    return paginatedProperties;
+    return allProperties.slice(skip, skip + limit);
   }
 
   public async getAllProperties(

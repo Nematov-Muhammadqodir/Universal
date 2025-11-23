@@ -99,6 +99,27 @@ export class AvailablePropertiesSearchInput {
   @Field(() => String, { nullable: true })
   propertyRegion?: string;
 
+  @Field(() => String, { nullable: true })
+  propertyCity?: string;
+
+  @Field(() => String, { nullable: true })
+  propertyType?: string;
+
+  @Field(() => Number, { nullable: true })
+  propertyStars?: number;
+
+  @Field(() => Boolean, { nullable: true })
+  breakfastIncluded?: boolean;
+
+  @Field(() => Boolean, { nullable: true })
+  parkingIncluded?: boolean;
+
+  @Field(() => Boolean, { nullable: true })
+  allowChildren?: boolean;
+
+  @Field(() => Boolean, { nullable: true })
+  allowPets?: boolean;
+
   @Field(() => Date, { nullable: true })
   from?: Date;
 
