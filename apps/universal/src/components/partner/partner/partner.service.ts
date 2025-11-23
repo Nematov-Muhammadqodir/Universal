@@ -240,7 +240,9 @@ export class PartnerService {
     if (isPropertyLevelFilter) {
       const match: any = { propertyStatus: PropertyStatus.ACTIVE };
 
-      if (propertyType) match.propertyType = propertyType;
+      if (propertyType && propertyType.length > 0) {
+        match.propertyType = { $in: propertyType };
+      }
       if (propertyCity) match.propertyCity = propertyCity;
       if (propertyStars !== undefined)
         match.propertyStars = { $gte: propertyStars };

@@ -102,8 +102,8 @@ export class AvailablePropertiesSearchInput {
   @Field(() => String, { nullable: true })
   propertyCity?: string;
 
-  @Field(() => String, { nullable: true })
-  propertyType?: string;
+  @Field(() => [String], { nullable: true }) // <-- array
+  propertyType?: string[];
 
   @Field(() => Number, { nullable: true })
   propertyStars?: number;
