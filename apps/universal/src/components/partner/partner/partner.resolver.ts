@@ -14,6 +14,7 @@ import {
   PartnerProperty,
 } from 'apps/universal/src/libs/dto/partner/partnerProperty/partnerProperty';
 import {
+  AllPropertiesSearchInput,
   AvailablePropertiesSearchInput,
   OrdinaryInquery,
   PartnerPropertyInput,
@@ -97,6 +98,16 @@ export class PartnerResolver {
     console.log('Query: getAllAvailableProperties');
 
     return await this.partnerService.getAllAvailableProperties(input);
+  }
+
+  @UseGuards(WithoutGuard)
+  @Query(() => PartnerProperties)
+  public async getAllProperties(
+    @Args('input') input: AllPropertiesSearchInput,
+  ): Promise<PartnerProperties> {
+    console.log('Query: getAllProperties');
+
+    return await this.partnerService.getAllProperties(input);
   }
 
   @UseGuards(WithoutGuard)

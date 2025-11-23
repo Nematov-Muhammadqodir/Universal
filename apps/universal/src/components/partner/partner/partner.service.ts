@@ -14,6 +14,7 @@ import {
 import { Message } from 'apps/universal/src/libs/enums/common.enum';
 import { GuestStatus } from 'apps/universal/src/libs/enums/user.enum';
 import {
+  AllPropertiesSearchInput,
   AvailablePropertiesSearchInput,
   OrdinaryInquery,
   PartnerPropertyInput,
@@ -299,6 +300,41 @@ export class PartnerService {
     const paginatedProperties = allProperties.slice(skip, skip + limit);
 
     return paginatedProperties;
+  }
+
+  public async getAllProperties(
+    input: AllPropertiesSearchInput,
+  ): Promise<PartnerProperties> {
+    const { propertyType, propertyCity, page, limit } = input;
+
+    const match: T = { propertyStatus: PropertyStatus.ACTIVE };
+
+    if (propertyType) {
+      match.propertyType = propertyType;
+    }
+    if (propertyCity) {
+      match.propertyCity = propertyCity;
+    }
+
+    const result = await this.partnerPropertyModel.aggregate([
+      { $match: match },
+      {
+        $facet: {
+          list: [
+            { $skip: (input.page - 1) * input.limit },
+            { $limit: input.limit },
+          ],
+          metaCounter: [{ $count: 'total' }],
+        },
+      },
+    ]);
+
+    console.log('RESULT', result[0]);
+
+    if (!result.length)
+      throw new InternalServerErrorException(Message.NO_DATA_FOUND);
+
+    return result[0];
   }
 
   public async getPartnerPropertyByHotelOwner(

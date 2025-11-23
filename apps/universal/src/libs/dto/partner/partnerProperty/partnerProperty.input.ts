@@ -117,3 +117,18 @@ export class AvailablePropertiesSearchInput {
   @Field(() => Int, { defaultValue: 6 })
   limit: number;
 }
+
+@InputType()
+export class AllPropertiesSearchInput {
+  @Field(() => PropertyType, { nullable: true })
+  propertyType?: PropertyType;
+
+  @Field(() => String, { nullable: true })
+  propertyCity?: string;
+
+  @Field(() => Int, { defaultValue: 1 })
+  page: number;
+
+  @Field(() => Int, { defaultValue: 6 })
+  limit: number;
+}
