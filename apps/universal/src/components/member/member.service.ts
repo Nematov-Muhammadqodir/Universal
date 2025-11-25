@@ -11,6 +11,7 @@ import { GuestInput, GuestLoginInput } from '../../libs/dto/user/user.input';
 import { Message } from '../../libs/enums/common.enum';
 import { GuestStatus } from '../../libs/enums/user.enum';
 import { GuestUpdateInput } from '../../libs/dto/user/user.update';
+import { T } from '../../libs/types/common';
 
 @Injectable()
 export class MemberService {
@@ -89,9 +90,15 @@ export class MemberService {
     return result;
   }
 
-  public async getGuestProfile(guestId: ObjectId): Promise<Guest> {
-    console.log('getGuestProfile guestId', guestId);
-    const result = await this.guestModel.findById(guestId).exec();
+  public async getGuestProfile(
+    memberId: ObjectId,
+    targetId: ObjectId,
+  ): Promise<Guest> {
+    const search: T = {
+      _id: targetId,
+      memberStatus: { $in: [GuestStatus.ACTIVE, GuestStatus.BLOCK] },
+    };
+    const result = await this.guestModel.findById(targetId).exec();
     if (!result)
       throw new InternalServerErrorException(Message.SOMETHING_WENT_WRONG);
     return result;

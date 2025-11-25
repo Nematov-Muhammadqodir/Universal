@@ -13,7 +13,11 @@ import { ObjectId } from 'mongoose';
 import { WithoutGuard } from '../auth/guards/without.guard';
 import { GraphQLUpload, FileUpload } from 'graphql-upload';
 import { Message } from '../../libs/enums/common.enum';
-import { getSerialForImage, validMimeTypes } from '../../libs/config';
+import {
+  getSerialForImage,
+  shapeIntoMongoObjectId,
+  validMimeTypes,
+} from '../../libs/config';
 import { createWriteStream } from 'fs';
 
 @Resolver()
@@ -73,9 +77,13 @@ export class MemberResolver {
 
   @UseGuards(WithoutGuard)
   @Query(() => Guest)
-  public async getGuestProfile(@AuthMember('_id') guestId: ObjectId) {
+  public async getGuestProfile(
+    @Args('memberId') input: string,
+    @AuthMember('_id') guestId: ObjectId,
+  ) {
     console.log('Query: getGuestProfile');
-    return await this.memberService.getGuestProfile(guestId);
+    const targetId = shapeIntoMongoObjectId(input);
+    return await this.memberService.getGuestProfile(guestId, targetId);
   }
 
   //*=========================imageUploader👇🏻==============================
