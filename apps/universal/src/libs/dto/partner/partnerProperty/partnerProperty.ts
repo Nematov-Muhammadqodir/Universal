@@ -80,6 +80,9 @@ export class PartnerProperty {
   propertyViews: number;
 
   @Field(() => Number)
+  propertyLikes: number;
+
+  @Field(() => Number)
   propertyComments: number;
 
   @Field(() => [String])

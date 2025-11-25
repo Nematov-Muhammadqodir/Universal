@@ -32,6 +32,9 @@ import { PartnerPropertyRoom } from 'apps/universal/src/libs/dto/partner/partner
 import { PartnerPropertyRoomInput } from 'apps/universal/src/libs/dto/partner/partnerProperty/partnerPropertyRoom/partnerPropertyRoom.input';
 import { PartnerPropertyUpdate } from 'apps/universal/src/libs/dto/partner/partnerProperty/partnerProperty.update';
 import { PartnerPropertyRoomUpdate } from 'apps/universal/src/libs/dto/partner/partnerProperty/partnerPropertyRoom/partnerPropertyRoom.update';
+import { LikeInput } from 'apps/universal/src/libs/dto/like/like.input';
+import { LikeGroup } from 'apps/universal/src/libs/enums/like.enum';
+import { LikeService } from '../../like/like.service';
 
 @Injectable()
 export class PartnerService {
@@ -43,6 +46,7 @@ export class PartnerService {
     private readonly partnerPropertyModel: Model<PartnerProperty>,
     private authService: AuthService,
     private viewService: ViewService,
+    private likeService: LikeService,
   ) {}
 
   public async partnerSignup(input: PartnerInput): Promise<Partner> {
@@ -504,6 +508,37 @@ export class PartnerService {
   ): Promise<PartnerProperties> {
     console.log('memberId', memberId);
     return await this.viewService.getVisitedProperties(memberId, input);
+  }
+
+  public async likeTargetProperty(
+    memberId: ObjectId,
+    likeRefId: ObjectId,
+  ): Promise<PartnerProperty> {
+    console.log('Service: likeTargetProperty');
+
+    const target: PartnerProperty = await this.partnerPropertyModel
+      .findOne({ _id: likeRefId, propertyStatus: PropertyStatus.ACTIVE })
+      .exec();
+    if (!target) throw new InternalServerErrorException(Message.NO_DATA_FOUND);
+
+    const input: LikeInput = {
+      memberId: memberId,
+      likeRefId: likeRefId,
+      likeGroup: LikeGroup.PROPERTY,
+    };
+
+    // Like Toggle
+    const modifier: number = await this.likeService.toggleLike(input);
+
+    const result = await this.propertyStatsEditor({
+      _id: likeRefId,
+      targetKey: 'propertyLikes',
+      modifier: modifier,
+    });
+
+    if (!result)
+      throw new InternalServerErrorException(Message.SOMETHING_WENT_WRONG);
+    return result;
   }
 
   public async propertyStatsEditor(

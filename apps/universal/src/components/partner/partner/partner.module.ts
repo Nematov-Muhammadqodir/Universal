@@ -7,6 +7,7 @@ import { AuthModule } from '../../auth/auth.module';
 import PartnerPropertySchema from 'apps/universal/src/schemas/PartnerProperty';
 import { ViewModule } from '../../view/view.module';
 import PartnerPropertyRoomSchema from 'apps/universal/src/schemas/PartnerPropertyRoom';
+import { LikeModule } from '../../like/like.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import PartnerPropertyRoomSchema from 'apps/universal/src/schemas/PartnerPropert
     AuthModule,
     ViewModule,
     PartnerModule,
+    LikeModule,
   ],
   providers: [PartnerResolver, PartnerService],
   exports: [PartnerService],

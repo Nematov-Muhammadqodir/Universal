@@ -157,4 +157,15 @@ export class PartnerResolver {
     console.log('Query: getVisitedProperties');
     return await this.partnerService.getVisitedProperties(memberId, input);
   }
+
+  @UseGuards(AuthGuard)
+  @Mutation(() => PartnerProperty)
+  public async likeTargetProperty(
+    @Args('propertyId') input: string,
+    @AuthMember('_id') memberId: ObjectId,
+  ): Promise<PartnerProperty> {
+    console.log('Mutation: likeTargetProperty');
+    const likeRefId = shapeIntoMongoObjectId(input);
+    return await this.partnerService.likeTargetProperty(memberId, likeRefId);
+  }
 }

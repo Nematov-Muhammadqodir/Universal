@@ -58,6 +58,10 @@ const PartnerPropertySchema = new Schema(
       type: Number,
       default: 0,
     },
+    propertyLikes: {
+      type: Number,
+      default: 0,
+    },
     propertyComments: {
       type: Number,
       default: 0,

@@ -17,6 +17,15 @@ export const shapeIntoMongoObjectId = (target: any) => {
   return typeof target === 'string' ? new ObjectId(target) : target;
 };
 
+export const lookupFavorite = {
+  $lookup: {
+    from: 'partners',
+    localField: 'favoriteProperty.partnerId',
+    foreignField: '_id',
+    as: 'favoriteProperty.memberData',
+  },
+};
+
 export const lookupVisit = {
   $lookup: {
     from: 'partners',
