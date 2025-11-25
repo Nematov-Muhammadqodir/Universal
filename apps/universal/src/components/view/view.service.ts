@@ -6,7 +6,7 @@ import { ViewInput } from '../../libs/dto/view/view.input';
 import { T } from '../../libs/types/common';
 
 import { ViewGroup } from '../../libs/enums/view.enum';
-import { lookupVisit } from '../../libs/config';
+import { lookupAuthMemberLiked, lookupVisit } from '../../libs/config';
 import {
   PartnerProperties,
   PartnerProperty,
@@ -62,6 +62,7 @@ export class ViewService {
             { $skip: (page - 1) * limit },
             { $limit: limit },
             lookupVisit,
+            lookupAuthMemberLiked(memberId),
             { $unwind: '$visitedProperty.memberData' },
           ],
           metaCounter: [{ $count: 'total' }],

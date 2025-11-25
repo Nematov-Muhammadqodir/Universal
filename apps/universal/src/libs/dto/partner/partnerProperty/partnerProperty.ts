@@ -7,6 +7,7 @@ import {
   AvailableBeds,
   ReservedDate,
 } from './partnerPropertyRoom/partnerPropertyRoom';
+import { MeLiked } from '../../like/like';
 
 @ObjectType()
 export class PropertyRoom {
@@ -129,6 +130,11 @@ export class PartnerProperty {
 
   @Field(() => Partner, { nullable: true })
   memberData?: Partner;
+
+  // From Aggregation
+
+  @Field(() => [MeLiked], { nullable: true })
+  meLiked?: MeLiked[];
 }
 
 @ObjectType()

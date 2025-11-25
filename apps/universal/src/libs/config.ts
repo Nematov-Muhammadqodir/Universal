@@ -1,6 +1,7 @@
 import { ObjectId } from 'bson';
 import * as path from 'path';
 import { v4 as uuidv4 } from 'uuid';
+import { T } from './types/common';
 
 export const validMimeTypes = ['image/png', 'image/jpg', 'image/jpeg'];
 
@@ -33,4 +34,42 @@ export const lookupVisit = {
     foreignField: '_id',
     as: 'visitedProperty.memberData',
   },
+};
+
+export const lookupAuthMemberLiked = (
+  memberId: T,
+  targetRefId: string = '$visitedProperty._id',
+) => {
+  return {
+    $lookup: {
+      from: 'likes',
+      let: {
+        localMemberId: memberId,
+        localLikeRefId: targetRefId,
+        localMyFavorite: true,
+      },
+      pipeline: [
+        {
+          $match: {
+            $expr: {
+              $and: [
+                { $eq: ['$likeRefId', '$$localLikeRefId'] },
+                { $eq: ['$memberId', '$$localMemberId'] },
+              ],
+            },
+          },
+        },
+
+        {
+          $project: {
+            _id: 0,
+            memberId: 1,
+            likeRefId: 1,
+            myFavorite: '$$localMyFavorite',
+          },
+        },
+      ],
+      as: 'visitedProperty.meLiked',
+    },
+  };
 };
