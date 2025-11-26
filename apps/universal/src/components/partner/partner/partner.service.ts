@@ -231,8 +231,8 @@ export class PartnerService {
 
     // ✅ If any property-level filter exists, query partnerPropertyModel
     const isPropertyLevelFilter =
-      propertyType ||
-      propertyCity ||
+      (propertyType?.length ?? 0) > 0 ||
+      !!propertyCity ||
       propertyStars !== undefined ||
       breakfastIncluded !== undefined ||
       parkingIncluded !== undefined ||
