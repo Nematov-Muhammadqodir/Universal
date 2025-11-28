@@ -137,6 +137,18 @@ export class PartnerResolver {
     return await this.partnerService.createPartnerPropertyRoom(input);
   }
 
+  @UseGuards(WithoutGuard)
+  @Query((returns) => PartnerPropertyRoom)
+  public async getPartnerPropertyRoom(
+    @Args('roomId') input: string,
+    @AuthMember('_id') memberId: ObjectId,
+  ): Promise<PartnerPropertyRoom> {
+    console.log('Query: getPartnerPropertyRoom');
+    console.log('memberId', memberId);
+    const propertyId = shapeIntoMongoObjectId(input);
+    return await this.partnerService.getPartnerPropertyRoom(propertyId);
+  }
+
   @UseGuards(AuthGuard)
   @Mutation(() => PartnerPropertyRoom)
   public async updatePartnerPropertyRoom(

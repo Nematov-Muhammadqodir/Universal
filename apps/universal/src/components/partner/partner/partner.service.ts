@@ -457,6 +457,22 @@ export class PartnerService {
     }
   }
 
+  public async getPartnerPropertyRoom(
+    propertyId: ObjectId,
+  ): Promise<PartnerPropertyRoom> {
+    const targetPropertyRoom: any = await this.partnerPropertyRoomModel
+      .findOne({ _id: propertyId })
+      .lean()
+      .exec();
+
+    console.log('targetPropertyRoom', targetPropertyRoom);
+
+    if (!targetPropertyRoom)
+      throw new InternalServerErrorException(Message.NO_DATA_FOUND);
+
+    return targetPropertyRoom;
+  }
+
   public async updatePartnerPropertyRoom(
     input: PartnerPropertyRoomUpdate,
     memberId: ObjectId,
