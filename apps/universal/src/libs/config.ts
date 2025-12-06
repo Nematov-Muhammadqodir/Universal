@@ -35,6 +35,14 @@ export const lookupVisit = {
     as: 'visitedProperty.memberData',
   },
 };
+export const lookupVisitForReservation = {
+  $lookup: {
+    from: 'partners',
+    localField: 'reservedProperty.partnerId',
+    foreignField: '_id',
+    as: 'reservedProperty.memberData',
+  },
+};
 
 export const lookupAuthMemberLiked = (
   memberId: T,
