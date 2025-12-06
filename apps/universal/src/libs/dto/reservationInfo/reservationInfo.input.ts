@@ -59,6 +59,18 @@ export class ReservationInfoInput {
   roomId: string;
 
   @IsNotEmpty()
+  @Field(() => String)
+  propertyId: string;
+
+  @IsNotEmpty()
+  @Field(() => String)
+  startDate: string;
+
+  @IsNotEmpty()
+  @Field(() => String)
+  endDate: string;
+
+  @IsNotEmpty()
   @IsBoolean()
   @Field(() => Boolean)
   ageConfirmation: boolean;

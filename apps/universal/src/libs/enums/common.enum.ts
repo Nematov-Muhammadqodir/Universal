@@ -24,6 +24,8 @@ export enum Message {
   TOKEN_CRAETION_FAILED = 'Token creation error!',
   PLEASE_ENTER_VALID_CREDENTIALS = 'Your email or phone number is not valid, please enter valid credentials!',
   WE_DO_NOT_HAVE_THIS_PROPERTY = "We don't have this type of Property!",
+  ROOM_ALREADY_BOOKED = 'The room is already booked for the selected dates! Please select other dates.',
+  ROOM_NOT_EXIST = 'The room does not exist for the selected property!',
 }
 
 export enum Direction {

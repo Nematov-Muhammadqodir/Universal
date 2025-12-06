@@ -12,6 +12,9 @@ export interface IReservationInfo extends Document {
   expiryDate: string;
   cvs: string;
   roomId: string;
+  propertyId: string;
+  startDate: string;
+  endDate: string;
   ageConfirmation: boolean;
   createdAt?: Date;
   updatedAt?: Date;
@@ -30,6 +33,9 @@ const ReservationInfoSchema = new Schema<IReservationInfo>(
     expiryDate: { type: String, required: true },
     cvs: { type: String, required: true },
     roomId: { type: String, required: true },
+    propertyId: { type: String, required: true },
+    startDate: { type: String, required: true },
+    endDate: { type: String, required: true },
     ageConfirmation: { type: Boolean, required: true },
   },
   { timestamps: true },

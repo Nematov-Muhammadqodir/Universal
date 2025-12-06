@@ -39,6 +39,15 @@ export class ReservationInfo {
   @Field(() => String)
   roomId: string;
 
+  @Field(() => String)
+  propertyId: string;
+
+  @Field(() => String)
+  startDate: string;
+
+  @Field(() => String)
+  endDate: string;
+
   @Field(() => Boolean)
   ageConfirmation: boolean;
 
