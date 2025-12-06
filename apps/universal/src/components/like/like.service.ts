@@ -64,7 +64,7 @@ export class LikeService {
         { $sort: { updatedAt: -1 } },
         {
           $lookup: {
-            from: 'properties',
+            from: 'partnersProperties',
             localField: 'likeRefId',
             foreignField: '_id',
             as: 'favoriteProperty',

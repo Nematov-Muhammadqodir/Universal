@@ -171,6 +171,16 @@ export class PartnerResolver {
   }
 
   @UseGuards(AuthGuard)
+  @Query((returns) => PartnerProperties)
+  public async getLikedProperties(
+    @Args('input') input: OrdinaryInquery,
+    @AuthMember('_id') memberId: ObjectId,
+  ): Promise<PartnerProperties> {
+    console.log('Query: getLikedProperties');
+    return await this.partnerService.getLikedProperties(memberId, input);
+  }
+
+  @UseGuards(AuthGuard)
   @Mutation(() => PartnerProperty)
   public async likeTargetProperty(
     @Args('propertyId') input: string,

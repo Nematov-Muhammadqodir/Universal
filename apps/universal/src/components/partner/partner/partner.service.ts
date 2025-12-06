@@ -526,6 +526,14 @@ export class PartnerService {
     return await this.viewService.getVisitedProperties(memberId, input);
   }
 
+  public async getLikedProperties(
+    memberId: ObjectId,
+    input: OrdinaryInquery,
+  ): Promise<PartnerProperties> {
+    console.log('memberId', memberId);
+    return await this.likeService.getFavoriteProperties(memberId, input);
+  }
+
   public async likeTargetProperty(
     memberId: ObjectId,
     likeRefId: ObjectId,
