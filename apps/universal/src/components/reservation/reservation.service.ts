@@ -67,18 +67,38 @@ export class ReservationService {
     input: OrdinaryInquery,
   ): Promise<PartnerProperties> {
     const { page, limit } = input;
-    console.log('getReservedRooms input', input);
-    const match: T = { guestId: String(memberId) };
-    console.log('match', match);
+
+    const match: T = { guestId: memberId.toString() };
 
     const data = await this.reservationModel.aggregate([
       { $match: match },
       { $sort: { updatedAt: -1 } },
+
+      // Convert string → ObjectId
       {
         $addFields: {
           propertyIdObj: { $toObjectId: '$propertyId' },
+          roomIdObj: { $toObjectId: '$roomId' },
         },
       },
+
+      // Fetch room data
+      {
+        $lookup: {
+          from: 'partnerPropertyRooms',
+          localField: 'roomIdObj',
+          foreignField: '_id',
+          as: 'roomData',
+        },
+      },
+      {
+        $unwind: {
+          path: '$roomData',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+
+      // Fetch property data
       {
         $lookup: {
           from: 'partnersProperties',
@@ -88,6 +108,14 @@ export class ReservationService {
         },
       },
       { $unwind: '$reservedProperty' },
+
+      // Add roomId directly to final response
+      // {
+      //   $addFields: {
+      //     roomId: '$roomIdObj', // return ObjectId then convert to string later
+      //   },
+      // },
+
       {
         $facet: {
           list: [
@@ -100,13 +128,17 @@ export class ReservationService {
         },
       },
     ]);
-    console.log('data', data);
+
     const result: PartnerProperties = {
-      list: [],
+      list: data[0].list.map((ele) => ({
+        ...ele.reservedProperty,
+        // roomId: ele.roomData?._id?.toString() ?? '', // ✅ RETURNING roomId NOW
+        roomData: ele.roomData ?? {}, // never null
+      })),
       metaCounter: data[0].metaCounter,
     };
-    result.list = data[0].list.map((ele) => ele.reservedProperty);
-    console.log('result', result);
+
+    console.log('RESULT', result);
 
     return result;
   }

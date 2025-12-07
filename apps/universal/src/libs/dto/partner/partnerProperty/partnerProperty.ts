@@ -11,8 +11,8 @@ import { MeLiked } from '../../like/like';
 
 @ObjectType()
 export class PropertyRoom {
-  @Field(() => String)
-  roomId: string;
+  @Field(() => String, { nullable: true })
+  roomId?: string;
 
   @Field(() => String)
   roomType: string;
@@ -43,6 +43,57 @@ export class PropertyRoom {
 
   @Field(() => String)
   roomName: string;
+}
+
+@ObjectType()
+export class PropertyRoomTwo {
+  @Field(() => String)
+  _id: string; // <- THIS IS THE REAL ROOM ID
+
+  @Field(() => String)
+  propertyId: string;
+
+  @Field(() => String)
+  roomType: string;
+
+  @Field(() => Int)
+  currentRoomTypeAmount: number;
+
+  @Field(() => AvailableBeds)
+  availableBeds: AvailableBeds;
+
+  @Field(() => Int)
+  numberOfGuestsCanStay: number;
+
+  @Field(() => Boolean)
+  isSmokingAllowed: boolean;
+
+  @Field(() => Boolean)
+  isBathroomPrivate: boolean;
+
+  @Field(() => [String])
+  availableBathroomFacilities: string[];
+
+  @Field(() => [String])
+  roomFacilities: string[];
+
+  @Field(() => [ReservedDate])
+  reservedDates: ReservedDate[];
+
+  @Field(() => String)
+  roomName: string;
+
+  @Field(() => String)
+  roomPricePerNight: string;
+
+  @Field(() => String)
+  roomPropertyLocation: string;
+
+  @Field(() => Date)
+  createdAt: Date;
+
+  @Field(() => Date)
+  updatedAt: Date;
 }
 
 @ObjectType()
@@ -135,6 +186,12 @@ export class PartnerProperty {
 
   @Field(() => [MeLiked], { nullable: true })
   meLiked?: MeLiked[];
+
+  // @Field(() => String, { nullable: true })
+  // roomId?: string;
+
+  @Field(() => PropertyRoomTwo, { nullable: true })
+  roomData?: PropertyRoomTwo;
 }
 
 @ObjectType()
