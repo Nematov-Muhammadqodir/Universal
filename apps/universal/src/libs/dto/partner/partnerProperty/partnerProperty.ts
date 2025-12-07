@@ -8,6 +8,7 @@ import {
   ReservedDate,
 } from './partnerPropertyRoom/partnerPropertyRoom';
 import { MeLiked } from '../../like/like';
+import { ReservationInfo } from '../../reservationInfo/reservationInfo';
 
 @ObjectType()
 export class PropertyRoom {
@@ -192,6 +193,9 @@ export class PartnerProperty {
 
   @Field(() => PropertyRoomTwo, { nullable: true })
   roomData?: PropertyRoomTwo;
+
+  @Field(() => ReservationInfo, { nullable: true })
+  reservationData?: ReservationInfo;
 }
 
 @ObjectType()

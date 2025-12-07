@@ -129,11 +129,32 @@ export class ReservationService {
       },
     ]);
 
+    console.log('DATA', data[0]);
+
     const result: PartnerProperties = {
       list: data[0].list.map((ele) => ({
-        ...ele.reservedProperty,
-        // roomId: ele.roomData?._id?.toString() ?? '', // ✅ RETURNING roomId NOW
-        roomData: ele.roomData ?? {}, // never null
+        ...ele.reservedProperty, // ← SPREAD the real property fields here!
+        roomData: ele.roomData ?? null, // ← correct field name
+        reservationData: {
+          _id: ele._id,
+          guestId: ele.guestId,
+          guestName: ele.guestName,
+          guestLastName: ele.guestLastName,
+          guestEmail: ele.guestEmail,
+          guestPhoneNumber: ele.guestPhoneNumber,
+          travelForWork: ele.travelForWork,
+          propertyId: ele.propertyId,
+          roomId: ele.roomId,
+          startDate: ele.startDate,
+          endDate: ele.endDate,
+          ageConfirmation: ele.ageConfirmation,
+          cardholderName: ele.cardholderName,
+          cardNumber: ele.cardNumber,
+          expiryDate: ele.expiryDate,
+          cvs: ele.cvs,
+          createdAt: ele.createdAt,
+          updatedAt: ele.updatedAt,
+        },
       })),
       metaCounter: data[0].metaCounter,
     };
