@@ -26,6 +26,7 @@ export enum Message {
   WE_DO_NOT_HAVE_THIS_PROPERTY = "We don't have this type of Property!",
   ROOM_ALREADY_BOOKED = 'The room is already booked for the selected dates! Please select other dates.',
   ROOM_NOT_EXIST = 'The room does not exist for the selected property!',
+  ALREADY_REVIEWED = 'You have already submitted a review for this property!',
 }
 
 export enum Direction {
