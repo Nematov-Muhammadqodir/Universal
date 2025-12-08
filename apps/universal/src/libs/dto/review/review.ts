@@ -33,12 +33,6 @@ export class Review {
   @Field(() => Int)
   freeWiFiRating: number;
 
-  @Field(() => String, { nullable: true })
-  comment?: string;
-
-  @Field(() => String, { nullable: true })
-  responseForComment?: string;
-
   @Field()
   createdAt: Date;
 

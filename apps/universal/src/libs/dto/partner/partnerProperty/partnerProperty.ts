@@ -183,19 +183,42 @@ export class PartnerProperty {
   @Field(() => Partner, { nullable: true })
   memberData?: Partner;
 
-  // From Aggregation
-
   @Field(() => [MeLiked], { nullable: true })
   meLiked?: MeLiked[];
-
-  // @Field(() => String, { nullable: true })
-  // roomId?: string;
 
   @Field(() => PropertyRoomTwo, { nullable: true })
   roomData?: PropertyRoomTwo;
 
   @Field(() => ReservationInfo, { nullable: true })
   reservationData?: ReservationInfo;
+
+  /** ----------------------------------
+   * ⭐ RATING FIELDS (ADDED)
+   * ---------------------------------- */
+
+  @Field(() => Number)
+  totalReviews: number;
+
+  @Field(() => Number)
+  staffRating: number;
+
+  @Field(() => Number)
+  facilitiesRating: number;
+
+  @Field(() => Number)
+  cleanlessRating: number;
+
+  @Field(() => Number)
+  comfortRating: number;
+
+  @Field(() => Number)
+  valueOfMoneyRating: number;
+
+  @Field(() => Number)
+  locationRating: number;
+
+  @Field(() => Number)
+  freeWiFiRating: number;
 }
 
 @ObjectType()

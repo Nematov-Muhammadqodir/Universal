@@ -39,9 +39,4 @@ export class ReviewInput {
   @IsNotEmpty()
   @Field(() => Number)
   freeWiFiRating: number;
-
-  @IsOptional()
-  @Length(0, 1000)
-  @Field(() => String, { nullable: true })
-  comment?: string;
 }

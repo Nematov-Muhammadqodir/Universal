@@ -55,15 +55,6 @@ const ReviewSchema = new Schema(
       min: 1,
       max: 10,
     },
-
-    comment: {
-      type: String,
-      default: '',
-    },
-    responseForComment: {
-      type: String,
-      default: '',
-    },
   },
   { timestamps: true, collection: 'reviews' },
 );

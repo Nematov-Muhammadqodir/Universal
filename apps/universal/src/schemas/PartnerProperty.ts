@@ -10,69 +10,88 @@ import PartnerPropertyRoomSchema from './PartnerPropertyRoom';
 const PartnerPropertySchema = new Schema(
   {
     partnerId: { type: Schema.Types.ObjectId, ref: 'partners', required: true },
+
     propertyType: {
       type: String,
       enum: PropertyType,
       default: PropertyType.HOTEL,
       required: true,
     },
+
     propertyCountry: { type: String, required: true },
     propertyRegion: { type: String, required: true },
     propertyCity: { type: String, required: true },
     propertyPostCode: { type: String, required: true },
+
     propertyName: {
       type: String,
       index: { unique: true, sparse: true },
       required: true,
     },
+
     propertyStars: { type: Number, required: true },
+
     propertyFacilities: {
       type: [String],
       enum: Object.values(PropertyFacilities),
       required: true,
       default: [],
     },
+
     breakfastIncluded: { type: Boolean, default: false, required: true },
     parkingIncluded: { type: Boolean, default: false, required: true },
+
     hotelStaffLanguages: {
       type: [String],
       enum: HotelStaffLanguages,
       default: [HotelStaffLanguages.ENGLISH],
       required: true,
     },
+
     propertyImages: {
       type: [String],
       default: [],
     },
+
     propertyStatus: {
       type: String,
       enum: PropertyStatus,
       default: PropertyStatus.ACTIVE,
     },
+
     propertyRooms: {
       type: [PartnerPropertyRoomSchema],
       default: [],
     },
 
-    propertyViews: {
-      type: Number,
-      default: 0,
-    },
-    propertyLikes: {
-      type: Number,
-      default: 0,
-    },
-    propertyComments: {
-      type: Number,
-      default: 0,
-    },
+    /** -------------------------------
+     *  ⭐ RATING AGGREGATION FIELDS
+     *  ------------------------------- */
+    totalReviews: { type: Number, default: 0 }, // number of reviews left
+
+    staffRating: { type: Number, default: 0 },
+    facilitiesRating: { type: Number, default: 0 },
+    cleanlessRating: { type: Number, default: 0 },
+    comfortRating: { type: Number, default: 0 },
+    valueOfMoneyRating: { type: Number, default: 0 },
+    locationRating: { type: Number, default: 0 },
+    freeWiFiRating: { type: Number, default: 0 },
+
+    /** ------------------------------- */
+
+    propertyViews: { type: Number, default: 0 },
+    propertyLikes: { type: Number, default: 0 },
+    propertyComments: { type: Number, default: 0 },
+
     checkInTimeFrom: { type: String, required: true },
     checkInTimeUntill: { type: String, required: true },
     checkOutTimeFrom: { type: String, required: true },
     checkOutTimeUntill: { type: String, required: true },
+
     allowChildren: { type: Boolean, default: false, required: true },
     allowPets: { type: Boolean, default: false, required: true },
   },
+
   { timestamps: true, collection: 'partnersProperties' },
 );
 

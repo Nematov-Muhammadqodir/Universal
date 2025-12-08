@@ -155,7 +155,8 @@ export class PartnerService {
       _id: propertyId,
       propertyStatus: PropertyStatus.ACTIVE,
     };
-    const targetProperty: any = await this.partnerPropertyModel // ✅ Change to 'any'
+
+    const targetProperty: any = await this.partnerPropertyModel
       .findOne(search)
       .lean()
       .exec();
@@ -163,15 +164,14 @@ export class PartnerService {
     if (!targetProperty)
       throw new InternalServerErrorException(Message.NO_DATA_FOUND);
 
-    // ✅ Fetch actual rooms for this property
+    /** ------------------------------------------
+     *  🔹 Attach REAL Rooms
+     * ------------------------------------------ */
     const rooms = await this.partnerPropertyRoomModel
-      .find({
-        propertyId: propertyId,
-      })
+      .find({ propertyId })
       .lean()
       .exec();
 
-    // ✅ Transform rooms to match PropertyRoom type
     targetProperty.propertyRooms = rooms.map((room) => ({
       roomId: room._id.toString(),
       roomType: room.roomType,
@@ -186,26 +186,45 @@ export class PartnerService {
       roomName: room.roomName,
     }));
 
+    /** ------------------------------------------
+     *  🔹 Add view count (if logged in)
+     * ------------------------------------------ */
     if (memberId) {
       const viewInput = {
-        memberId: memberId,
+        memberId,
         viewRefId: propertyId,
         viewGroup: ViewGroup.PROPERTY,
       };
 
       const newView = await this.viewService.recordView(viewInput);
+
       if (newView) {
         await this.propertyStatsEditor({
           _id: propertyId,
           targetKey: 'propertyViews',
           modifier: 1,
         });
-
         targetProperty.propertyViews++;
       }
     }
 
+    /** ------------------------------------------
+     *  🔹 Attach Partner Info
+     * ------------------------------------------ */
     targetProperty.memberData = await this.getPartner(targetProperty.partnerId);
+
+    /** ------------------------------------------
+     *  🔹 ⭐ ADD meLiked INFORMATION
+     * ------------------------------------------ */
+
+    if (memberId) {
+      targetProperty.meLiked = await this.likeService.checkLikeExistance({
+        memberId: memberId,
+        likeRefId: propertyId,
+        likeGroup: LikeGroup.PROPERTY,
+      });
+    }
+
     return targetProperty;
   }
 
