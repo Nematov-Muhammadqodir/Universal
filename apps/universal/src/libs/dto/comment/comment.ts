@@ -2,6 +2,9 @@ import { Field, Int, ObjectType } from '@nestjs/graphql';
 import { ObjectId } from 'mongoose';
 import { CommentStatus } from '../../enums/comment.enum';
 import { Guest, TotalCounter } from '../user/user';
+import { ReservationInfo } from '../reservationInfo/reservationInfo';
+import { PartnerProperty } from '../partner/partnerProperty/partnerProperty';
+import { PartnerPropertyRoom } from '../partner/partnerProperty/partnerPropertyRoom/partnerPropertyRoom';
 
 @ObjectType()
 export class Comment {
@@ -30,6 +33,15 @@ export class Comment {
 
   @Field(() => Guest, { nullable: true })
   memberData?: Guest;
+
+  @Field(() => ReservationInfo, { nullable: true })
+  reservationData?: ReservationInfo;
+
+  @Field(() => PartnerProperty, { nullable: true })
+  propertyData?: PartnerProperty;
+
+  @Field(() => PartnerPropertyRoom, { nullable: true })
+  roomData?: PartnerPropertyRoom;
 }
 
 @ObjectType()

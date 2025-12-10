@@ -83,3 +83,49 @@ export const lookupAuthMemberLiked = (
     },
   };
 };
+
+export const lookupMember = {
+  $lookup: {
+    from: 'guests',
+    localField: 'memberId',
+    foreignField: '_id',
+    as: 'memberData',
+  },
+};
+
+export const lookupReservation = {
+  $lookup: {
+    from: 'reservationinfoschemas',
+    let: {
+      memberId: { $toString: '$memberId' },
+      commentRefId: { $toString: '$commentRefId' },
+    },
+    pipeline: [
+      {
+        $match: {
+          $expr: {
+            $and: [
+              { $eq: ['$guestId', '$$memberId'] },
+              { $eq: ['$propertyId', '$$commentRefId'] },
+            ],
+          },
+        },
+      },
+      { $limit: 1 },
+    ],
+    as: 'reservationData',
+  },
+};
+
+export const unwindReservation = {
+  $unwind: { path: '$reservationData', preserveNullAndEmptyArrays: true },
+};
+
+export const lookupRoom = {
+  $lookup: {
+    from: 'partnerPropertyRooms',
+    localField: 'memberId',
+    foreignField: '_id',
+    as: 'memberData',
+  },
+};
