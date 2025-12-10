@@ -12,6 +12,8 @@ export const getSerialForImage = (filename: string) => {
   return uuidv4() + ext;
 };
 
+export const availableCommentSorts = ['createdAt', 'updatedAt'];
+
 export const shapeIntoMongoObjectId = (target: any) => {
   console.log('target id', target);
   console.log('target id type', typeof target);

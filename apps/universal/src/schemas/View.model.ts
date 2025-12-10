@@ -17,7 +17,6 @@ const ViewSchema = new Schema(
     memberId: {
       type: Schema.Types.ObjectId,
       required: true,
-      ref: 'Member',
     },
   },
   { timestamps: true, collection: 'views' },
