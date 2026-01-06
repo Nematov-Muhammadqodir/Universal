@@ -64,6 +64,14 @@ export class ViewService {
             lookupVisit,
             lookupAuthMemberLiked(memberId),
             { $unwind: '$visitedProperty.memberData' },
+            {
+              $lookup: {
+                from: 'partnerPropertyRooms',
+                localField: 'visitedProperty._id',
+                foreignField: 'propertyId',
+                as: 'visitedProperty.propertyRooms',
+              },
+            },
           ],
           metaCounter: [{ $count: 'total' }],
         },

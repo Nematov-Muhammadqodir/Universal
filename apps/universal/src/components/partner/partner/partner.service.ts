@@ -289,6 +289,7 @@ export class PartnerService {
       ]);
 
       if (!result.length) return [];
+      console.log('result[0]', result[0].list);
       return result[0].list;
     }
 
@@ -381,6 +382,13 @@ export class PartnerService {
 
     // Pagination
     const skip = (page - 1) * limit;
+
+    console.log(
+      'allProperties.slice(skip, skip + limit)',
+      allProperties.slice(skip, skip + limit).forEach((p: PartnerProperty) => {
+        console.log('p.propertyRooms', p.propertyRooms);
+      }),
+    );
     return allProperties.slice(skip, skip + limit);
   }
 
