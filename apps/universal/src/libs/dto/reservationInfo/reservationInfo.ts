@@ -1,4 +1,4 @@
-import { Field, ObjectType, ID } from '@nestjs/graphql';
+import { Field, Int, ObjectType } from '@nestjs/graphql';
 import { ObjectId } from 'mongoose';
 
 @ObjectType()
@@ -25,16 +25,13 @@ export class ReservationInfo {
   travelForWork: boolean;
 
   @Field(() => String)
-  cardholderName: string;
+  stripePaymentIntentId: string;
 
   @Field(() => String)
-  cardNumber: string;
+  paymentStatus: string;
 
-  @Field(() => String)
-  expiryDate: string;
-
-  @Field(() => String)
-  cvs: string;
+  @Field(() => Int)
+  paymentAmount: number;
 
   @Field(() => String)
   roomId: string;
@@ -56,4 +53,10 @@ export class ReservationInfo {
 
   @Field(() => Date)
   updatedAt: Date;
+}
+
+@ObjectType()
+export class StripePaymentIntent {
+  @Field(() => String)
+  clientSecret: string;
 }

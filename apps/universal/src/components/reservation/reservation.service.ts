@@ -1,25 +1,69 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, ObjectId } from 'mongoose';
-import { ReservationInfo } from '../../libs/dto/reservationInfo/reservationInfo';
-import { ReservationInfoInput } from '../../libs/dto/reservationInfo/reservationInfo.input';
+import {
+  ReservationInfo,
+  StripePaymentIntent,
+} from '../../libs/dto/reservationInfo/reservationInfo';
+import {
+  CreatePaymentIntentInput,
+  ReservationInfoInput,
+} from '../../libs/dto/reservationInfo/reservationInfo.input';
 import { Message } from '../../libs/enums/common.enum';
 import { PartnerService } from '../partner/partner/partner.service';
 import { PartnerPropertyRoom } from '../../libs/dto/partner/partnerProperty/partnerPropertyRoom/partnerPropertyRoom';
 import { OrdinaryInquery } from '../../libs/dto/partner/partnerProperty/partnerProperty.input';
 import { PartnerProperties } from '../../libs/dto/partner/partnerProperty/partnerProperty';
 import { T } from '../../libs/types/common';
-import { lookupVisit, lookupVisitForReservation } from '../../libs/config';
+import { lookupVisitForReservation } from '../../libs/config';
+import Stripe from 'stripe';
+import { Types } from 'mongoose';
 
 @Injectable()
 export class ReservationService {
+  private stripe: Stripe;
+
   constructor(
     @InjectModel('ReservationInfoSchema')
     private readonly reservationModel: Model<ReservationInfo>,
     @InjectModel('PartnerPropertyRoomSchema')
     private readonly partnerPropertyRoomModel: Model<PartnerPropertyRoom>,
     private partnerService: PartnerService,
-  ) {}
+  ) {
+    this.stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+  }
+
+  public async createPaymentIntent(
+    input: CreatePaymentIntentInput,
+  ): Promise<StripePaymentIntent> {
+    try {
+      const { amount, roomId, propertyId } = input;
+      console.log('input', input);
+
+      // Verify room exists
+      const exists = await this.partnerPropertyRoomModel
+        .findOne({ _id: new Types.ObjectId(roomId), propertyId: new Types.ObjectId(propertyId) })
+        .lean();
+      if (!exists) {
+        throw new BadRequestException(Message.ROOM_NOT_EXIST);
+      }
+
+      const paymentIntent = await this.stripe.paymentIntents.create({
+        amount: amount,
+        currency: 'krw',
+        metadata: {
+          roomId,
+          propertyId,
+        },
+      });
+
+      return { clientSecret: paymentIntent.client_secret };
+    } catch (err) {
+      console.log('Error, createPaymentIntent:', err.message);
+      console.log('Full error:', JSON.stringify(err, null, 2));
+      throw new BadRequestException(err.message);
+    }
+  }
 
   public async addReservationInfo(
     input: ReservationInfoInput,
@@ -52,8 +96,10 @@ export class ReservationService {
       } else if (bookedRoom) {
         throw new BadRequestException(Message.ROOM_ALREADY_BOOKED);
       } else {
-        const result: ReservationInfo =
-          await this.reservationModel.create(input);
+        const result: ReservationInfo = await this.reservationModel.create({
+          ...input,
+          paymentStatus: 'succeeded',
+        });
         return result;
       }
     } catch (err) {
@@ -74,7 +120,6 @@ export class ReservationService {
       { $match: match },
       { $sort: { updatedAt: -1 } },
 
-      // Convert string → ObjectId
       {
         $addFields: {
           propertyIdObj: { $toObjectId: '$propertyId' },
@@ -82,7 +127,6 @@ export class ReservationService {
         },
       },
 
-      // Fetch room data
       {
         $lookup: {
           from: 'partnerPropertyRooms',
@@ -98,7 +142,6 @@ export class ReservationService {
         },
       },
 
-      // Fetch property data
       {
         $lookup: {
           from: 'partnersProperties',
@@ -108,13 +151,6 @@ export class ReservationService {
         },
       },
       { $unwind: '$reservedProperty' },
-
-      // Add roomId directly to final response
-      // {
-      //   $addFields: {
-      //     roomId: '$roomIdObj', // return ObjectId then convert to string later
-      //   },
-      // },
 
       {
         $facet: {
@@ -129,12 +165,10 @@ export class ReservationService {
       },
     ]);
 
-    console.log('DATA', data[0]);
-
     const result: PartnerProperties = {
       list: data[0].list.map((ele) => ({
-        ...ele.reservedProperty, // ← SPREAD the real property fields here!
-        roomData: ele.roomData ?? null, // ← correct field name
+        ...ele.reservedProperty,
+        roomData: ele.roomData ?? null,
         reservationData: {
           _id: ele._id,
           guestId: ele.guestId,
@@ -143,23 +177,20 @@ export class ReservationService {
           guestEmail: ele.guestEmail,
           guestPhoneNumber: ele.guestPhoneNumber,
           travelForWork: ele.travelForWork,
+          stripePaymentIntentId: ele.stripePaymentIntentId,
+          paymentStatus: ele.paymentStatus,
+          paymentAmount: ele.paymentAmount,
           propertyId: ele.propertyId,
           roomId: ele.roomId,
           startDate: ele.startDate,
           endDate: ele.endDate,
           ageConfirmation: ele.ageConfirmation,
-          cardholderName: ele.cardholderName,
-          cardNumber: ele.cardNumber,
-          expiryDate: ele.expiryDate,
-          cvs: ele.cvs,
           createdAt: ele.createdAt,
           updatedAt: ele.updatedAt,
         },
       })),
       metaCounter: data[0].metaCounter,
     };
-
-    console.log('RESULT', result);
 
     return result;
   }

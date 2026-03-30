@@ -1,7 +1,13 @@
 import { Args, Mutation, Resolver, Query } from '@nestjs/graphql';
 import { ReservationService } from './reservation.service';
-import { ReservationInfo } from '../../libs/dto/reservationInfo/reservationInfo';
-import { ReservationInfoInput } from '../../libs/dto/reservationInfo/reservationInfo.input';
+import {
+  ReservationInfo,
+  StripePaymentIntent,
+} from '../../libs/dto/reservationInfo/reservationInfo';
+import {
+  CreatePaymentIntentInput,
+  ReservationInfoInput,
+} from '../../libs/dto/reservationInfo/reservationInfo.input';
 import { ObjectId } from 'mongoose';
 import { AuthMember } from '../auth/decorators/authMember.decorator';
 import { AuthGuard } from '../auth/guards/auth.guard';
@@ -12,6 +18,16 @@ import { OrdinaryInquery } from '../../libs/dto/partner/partnerProperty/partnerP
 @Resolver()
 export class ReservationResolver {
   constructor(private readonly reservationService: ReservationService) {}
+
+  @UseGuards(AuthGuard)
+  @Mutation(() => StripePaymentIntent)
+  public async createPaymentIntent(
+    @Args('input') input: CreatePaymentIntentInput,
+    @AuthMember('_id') memberId: ObjectId,
+  ): Promise<StripePaymentIntent> {
+    console.log('Mutation createPaymentIntent');
+    return await this.reservationService.createPaymentIntent(input);
+  }
 
   @Mutation(() => ReservationInfo)
   public async addReservationInfo(

@@ -7,10 +7,9 @@ export interface IReservationInfo extends Document {
   guestEmail: string;
   guestPhoneNumber: string;
   travelForWork: boolean;
-  cardholderName: string;
-  cardNumber: string;
-  expiryDate: string;
-  cvs: string;
+  stripePaymentIntentId: string;
+  paymentStatus: string;
+  paymentAmount: number;
   roomId: string;
   propertyId: string;
   startDate: string;
@@ -28,10 +27,9 @@ const ReservationInfoSchema = new Schema<IReservationInfo>(
     guestEmail: { type: String, required: true },
     guestPhoneNumber: { type: String, required: true },
     travelForWork: { type: Boolean, default: false },
-    cardholderName: { type: String, required: true },
-    cardNumber: { type: String, required: true },
-    expiryDate: { type: String, required: true },
-    cvs: { type: String, required: true },
+    stripePaymentIntentId: { type: String, required: true },
+    paymentStatus: { type: String, default: 'succeeded' },
+    paymentAmount: { type: Number, required: true },
     roomId: { type: String, required: true },
     propertyId: { type: String, required: true },
     startDate: { type: String, required: true },

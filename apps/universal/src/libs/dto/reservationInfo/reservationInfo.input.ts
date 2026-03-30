@@ -1,11 +1,11 @@
-import { Field, InputType } from '@nestjs/graphql';
+import { Field, InputType, Int } from '@nestjs/graphql';
 import {
   IsBoolean,
   IsNotEmpty,
+  IsNumber,
   IsOptional,
   IsString,
   Length,
-  Matches,
 } from 'class-validator';
 
 @InputType()
@@ -38,21 +38,14 @@ export class ReservationInfoInput {
   travelForWork: boolean;
 
   @IsNotEmpty()
-  @Length(1, 50)
+  @IsString()
   @Field(() => String)
-  cardholderName: string;
+  stripePaymentIntentId: string;
 
   @IsNotEmpty()
-  @Field(() => String)
-  cardNumber: string;
-
-  @IsNotEmpty()
-  @Field(() => String)
-  expiryDate: string;
-
-  @IsNotEmpty()
-  @Field(() => String)
-  cvs: string;
+  @IsNumber()
+  @Field(() => Int)
+  paymentAmount: number;
 
   @IsNotEmpty()
   @Field(() => String)
@@ -74,4 +67,22 @@ export class ReservationInfoInput {
   @IsBoolean()
   @Field(() => Boolean)
   ageConfirmation: boolean;
+}
+
+@InputType()
+export class CreatePaymentIntentInput {
+  @IsNotEmpty()
+  @IsNumber()
+  @Field(() => Int)
+  amount: number;
+
+  @IsNotEmpty()
+  @IsString()
+  @Field(() => String)
+  roomId: string;
+
+  @IsNotEmpty()
+  @IsString()
+  @Field(() => String)
+  propertyId: string;
 }

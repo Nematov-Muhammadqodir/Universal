@@ -7,7 +7,7 @@ import { availableCommentSorts } from '../../config';
 @InputType()
 export class CommentInput {
   @IsNotEmpty()
-  @Length(1, 100)
+  // @Length(1, 100)
   @Field(() => String)
   commentContent: string;
 
