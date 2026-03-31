@@ -21,6 +21,26 @@ const CommentSchema = new Schema(
       type: String,
       required: true,
     },
+    commentScore: {
+      type: Number,
+      default: 0,
+    },
+    commentLikes: {
+      type: Number,
+      default: 0,
+    },
+    commentDislikes: {
+      type: Number,
+      default: 0,
+    },
+    likedBy: {
+      type: [Schema.Types.ObjectId],
+      default: [],
+    },
+    dislikedBy: {
+      type: [Schema.Types.ObjectId],
+      default: [],
+    },
   },
   { timestamps: true, collection: 'comments' },
 );

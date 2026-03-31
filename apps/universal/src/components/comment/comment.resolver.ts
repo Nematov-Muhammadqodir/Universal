@@ -35,8 +35,33 @@ export class CommentResolver {
   ): Promise<Comment> {
     console.log('Mutation: updateComment');
     input._id = shapeIntoMongoObjectId(input._id);
-
     return await this.commentService.updateComment(memberId, input);
+  }
+
+  @UseGuards(AuthGuard)
+  @Mutation((returns) => Comment)
+  public async likeComment(
+    @Args('commentId') commentId: string,
+    @AuthMember('_id') memberId: ObjectId,
+  ): Promise<Comment> {
+    console.log('Mutation: likeComment');
+    return await this.commentService.likeComment(
+      memberId,
+      shapeIntoMongoObjectId(commentId),
+    );
+  }
+
+  @UseGuards(AuthGuard)
+  @Mutation((returns) => Comment)
+  public async dislikeComment(
+    @Args('commentId') commentId: string,
+    @AuthMember('_id') memberId: ObjectId,
+  ): Promise<Comment> {
+    console.log('Mutation: dislikeComment');
+    return await this.commentService.dislikeComment(
+      memberId,
+      shapeIntoMongoObjectId(commentId),
+    );
   }
 
   @UseGuards(WithoutGuard)
@@ -46,11 +71,9 @@ export class CommentResolver {
     @AuthMember('_id') memberId: ObjectId,
   ): Promise<Comments> {
     console.log('Query: getComments');
-
     input.search.commentRefId = shapeIntoMongoObjectId(
       input.search.commentRefId,
     );
-
     return await this.commentService.getComments(memberId, input);
   }
 }

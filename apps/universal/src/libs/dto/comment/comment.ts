@@ -23,6 +23,21 @@ export class Comment {
   @Field(() => String)
   memberId: ObjectId;
 
+  @Field(() => Int)
+  commentScore: number;
+
+  @Field(() => Int)
+  commentLikes: number;
+
+  @Field(() => Int)
+  commentDislikes: number;
+
+  @Field(() => [String], { nullable: true })
+  likedBy?: string[];
+
+  @Field(() => [String], { nullable: true })
+  dislikedBy?: string[];
+
   @Field(() => Date)
   createdAt: Date;
 

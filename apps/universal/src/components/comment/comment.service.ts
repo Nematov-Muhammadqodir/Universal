@@ -4,7 +4,7 @@ import {
   InternalServerErrorException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model, ObjectId } from 'mongoose';
+import { Model, ObjectId, Types } from 'mongoose';
 import { Comment, Comments } from '../../libs/dto/comment/comment';
 import { PartnerService } from '../partner/partner/partner.service';
 import { MemberService } from '../member/member.service';
@@ -174,5 +174,115 @@ export class CommentService {
       list: comments,
       metaCounter,
     };
+  }
+
+  public async likeComment(
+    memberId: ObjectId,
+    commentId: ObjectId,
+  ): Promise<Comment> {
+    const comment = await this.commentModel.findById(commentId);
+    if (!comment) throw new BadRequestException(Message.NO_DATA_FOUND);
+
+    const memberIdStr = memberId.toString();
+    const alreadyLiked = comment.likedBy?.map(String).includes(memberIdStr);
+    const alreadyDisliked = comment.dislikedBy?.map(String).includes(memberIdStr);
+
+    const update: any = {};
+
+    if (alreadyLiked) {
+      // Remove like (toggle off)
+      update.$pull = { likedBy: new Types.ObjectId(memberIdStr) };
+      update.$inc = { commentLikes: -1, commentScore: -1 };
+    } else {
+      // Add like
+      update.$addToSet = { likedBy: new Types.ObjectId(memberIdStr) };
+      update.$inc = { commentLikes: 1, commentScore: 1 };
+
+      // If was disliked, remove dislike too
+      if (alreadyDisliked) {
+        update.$pull = { dislikedBy: new Types.ObjectId(memberIdStr) };
+        update.$inc.commentDislikes = -1;
+        update.$inc.commentScore += 1;
+      }
+    }
+
+    // $addToSet and $pull can't both be in the same update on the same field,
+    // but they target different fields here, so it's safe.
+    // However if both $pull and $addToSet exist, we need two operations.
+    if (alreadyDisliked && !alreadyLiked) {
+      await this.commentModel.findByIdAndUpdate(commentId, {
+        $pull: { dislikedBy: new Types.ObjectId(memberIdStr) },
+        $inc: { commentDislikes: -1 },
+      });
+      const result = await this.commentModel.findByIdAndUpdate(
+        commentId,
+        {
+          $addToSet: { likedBy: new Types.ObjectId(memberIdStr) },
+          $inc: { commentLikes: 1, commentScore: 2 },
+        },
+        { new: true },
+      );
+      return result;
+    }
+
+    const result = await this.commentModel.findByIdAndUpdate(
+      commentId,
+      update,
+      { new: true },
+    );
+    return result;
+  }
+
+  public async dislikeComment(
+    memberId: ObjectId,
+    commentId: ObjectId,
+  ): Promise<Comment> {
+    const comment = await this.commentModel.findById(commentId);
+    if (!comment) throw new BadRequestException(Message.NO_DATA_FOUND);
+
+    const memberIdStr = memberId.toString();
+    const alreadyLiked = comment.likedBy?.map(String).includes(memberIdStr);
+    const alreadyDisliked = comment.dislikedBy?.map(String).includes(memberIdStr);
+
+    if (alreadyDisliked) {
+      // Remove dislike (toggle off)
+      const result = await this.commentModel.findByIdAndUpdate(
+        commentId,
+        {
+          $pull: { dislikedBy: new Types.ObjectId(memberIdStr) },
+          $inc: { commentDislikes: -1, commentScore: 1 },
+        },
+        { new: true },
+      );
+      return result;
+    }
+
+    // If was liked, remove like first
+    if (alreadyLiked) {
+      await this.commentModel.findByIdAndUpdate(commentId, {
+        $pull: { likedBy: new Types.ObjectId(memberIdStr) },
+        $inc: { commentLikes: -1 },
+      });
+      const result = await this.commentModel.findByIdAndUpdate(
+        commentId,
+        {
+          $addToSet: { dislikedBy: new Types.ObjectId(memberIdStr) },
+          $inc: { commentDislikes: 1, commentScore: -2 },
+        },
+        { new: true },
+      );
+      return result;
+    }
+
+    // Fresh dislike
+    const result = await this.commentModel.findByIdAndUpdate(
+      commentId,
+      {
+        $addToSet: { dislikedBy: new Types.ObjectId(memberIdStr) },
+        $inc: { commentDislikes: 1, commentScore: -1 },
+      },
+      { new: true },
+    );
+    return result;
   }
 }

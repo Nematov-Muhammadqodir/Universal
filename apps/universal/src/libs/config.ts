@@ -12,7 +12,7 @@ export const getSerialForImage = (filename: string) => {
   return uuidv4() + ext;
 };
 
-export const availableCommentSorts = ['createdAt', 'updatedAt'];
+export const availableCommentSorts = ['createdAt', 'updatedAt', 'commentScore'];
 
 export const shapeIntoMongoObjectId = (target: any) => {
   console.log('target id', target);

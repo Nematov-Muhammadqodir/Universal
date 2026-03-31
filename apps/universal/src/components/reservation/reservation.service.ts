@@ -98,6 +98,18 @@ export class ReservationService {
           ...input,
           paymentStatus: 'succeeded',
         });
+
+        // Update room's reservedDates array
+        await this.partnerPropertyRoomModel.findByIdAndUpdate(roomId, {
+          $push: {
+            reservedDates: {
+              userId: new Types.ObjectId(input.guestId),
+              from: new Date(startDate),
+              until: new Date(endDate),
+            },
+          },
+        });
+
         return result;
       }
     } catch (err) {

@@ -293,77 +293,68 @@ export class PartnerService {
       return result[0].list;
     }
 
-    // ✅ Otherwise, use room-level aggregation (region, dates, guests)
-    const matchConditions: any = {};
+    // ✅ Otherwise, use region-based property search with room availability info
+    const propertyMatch: any = { propertyStatus: PropertyStatus.ACTIVE };
 
     if (propertyRegion) {
-      matchConditions.roomPropertyLocation = {
+      propertyMatch.propertyRegion = {
         $regex: new RegExp(propertyRegion, 'i'),
       };
     }
+    if (propertyStars !== undefined)
+      propertyMatch.propertyStars = { $gte: propertyStars };
+    if (breakfastIncluded !== undefined)
+      propertyMatch.breakfastIncluded = breakfastIncluded;
+    if (parkingIncluded !== undefined)
+      propertyMatch.parkingIncluded = parkingIncluded;
+    if (allowChildren !== undefined)
+      propertyMatch.allowChildren = allowChildren;
+    if (allowPets !== undefined) propertyMatch.allowPets = allowPets;
 
-    if (adults !== undefined || children !== undefined) {
-      const totalGuests = (adults || 0) + (children || 0);
-      if (totalGuests > 0)
-        matchConditions.numberOfGuestsCanStay = { $gte: totalGuests };
-    }
+    // Fetch all matching properties
+    const properties = await this.partnerPropertyModel
+      .find(propertyMatch)
+      .skip((page - 1) * limit)
+      .limit(limit)
+      .lean()
+      .exec();
 
-    if (from && until) {
-      const fromDate = new Date(from);
-      const untilDate = new Date(until);
+    // Fetch rooms for these properties and attach only available ones
+    const propertyIds = properties.map((p) => p._id);
+    const allRooms = await this.partnerPropertyRoomModel
+      .find({ propertyId: { $in: propertyIds } })
+      .lean()
+      .exec();
 
-      matchConditions.reservedDates = {
-        $not: {
-          $elemMatch: {
-            from: { $lte: untilDate },
-            until: { $gte: fromDate },
-          },
-        },
-      };
-    }
+    const totalGuests =
+      ((adults || 0) + (children || 0)) > 0
+        ? (adults || 0) + (children || 0)
+        : 0;
+    const fromDate = from ? new Date(from) : null;
+    const untilDate = until ? new Date(until) : null;
 
-    // Aggregate rooms
-    const availableRooms = await this.partnerPropertyRoomModel.aggregate([
-      { $match: matchConditions },
-      {
-        $lookup: {
-          from: 'partnersProperties',
-          localField: 'propertyId',
-          foreignField: '_id',
-          as: 'property',
-        },
-      },
-      { $unwind: '$property' },
-      {
-        $match: {
-          'property.propertyStatus': PropertyStatus.ACTIVE,
-          ...(propertyStars !== undefined && {
-            'property.propertyStars': { $gte: propertyStars },
-          }),
-          ...(breakfastIncluded !== undefined && {
-            'property.breakfastIncluded': breakfastIncluded,
-          }),
-          ...(parkingIncluded !== undefined && {
-            'property.parkingIncluded': parkingIncluded,
-          }),
-          ...(allowChildren !== undefined && {
-            'property.allowChildren': allowChildren,
-          }),
-          ...(allowPets !== undefined && { 'property.allowPets': allowPets }),
-        },
-      },
-    ]);
+    return properties.map((property: any) => {
+      const rooms = allRooms
+        .filter((r) => r.propertyId.toString() === property._id.toString())
+        .filter((room) => {
+          // Filter by guest capacity
+          if (totalGuests > 0 && room.numberOfGuestsCanStay < totalGuests)
+            return false;
 
-    // Merge rooms by property
-    const propertiesMap: Record<string, any> = {};
+          // Filter by date availability
+          if (fromDate && untilDate && room.reservedDates?.length) {
+            const hasConflict = room.reservedDates.some((rd: any) => {
+              const rdFrom = new Date(rd.from).getTime();
+              const rdUntil = new Date(rd.until).getTime();
+              return fromDate.getTime() < rdUntil && untilDate.getTime() > rdFrom;
+            });
+            if (hasConflict) return false;
+          }
 
-    availableRooms.forEach((room) => {
-      const propId = room.property._id.toString();
-      if (!propertiesMap[propId]) {
-        propertiesMap[propId] = { ...room.property, propertyRooms: [] };
-      }
+          return true;
+        });
 
-      propertiesMap[propId].propertyRooms.push({
+      property.propertyRooms = rooms.map((room) => ({
         roomId: room._id,
         roomType: room.roomType,
         roomPricePerNight: room.roomPricePerNight,
@@ -375,21 +366,10 @@ export class PartnerService {
         isBathroomPrivate: room.isBathroomPrivate,
         isSmokingAllowed: room.isSmokingAllowed,
         roomName: room.roomName,
-      });
+      }));
+
+      return property;
     });
-
-    const allProperties = Object.values(propertiesMap);
-
-    // Pagination
-    const skip = (page - 1) * limit;
-
-    console.log(
-      'allProperties.slice(skip, skip + limit)',
-      allProperties.slice(skip, skip + limit).forEach((p: PartnerProperty) => {
-        console.log('p.propertyRooms', p.propertyRooms);
-      }),
-    );
-    return allProperties.slice(skip, skip + limit);
   }
 
   public async getAllProperties(
