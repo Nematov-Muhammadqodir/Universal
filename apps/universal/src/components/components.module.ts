@@ -6,8 +6,9 @@ import { ViewModule } from './view/view.module';
 import { ReservationModule } from './reservation/reservation.module';
 import { ReviewModule } from './review/review.module';
 import { CommentModule } from './comment/comment.module';
+import { AttractionModule } from './attraction/attraction.module';
 
 @Module({
-  imports: [AuthModule, MemberModule, PartnerModule, ViewModule, ReservationModule, ReviewModule, CommentModule],
+  imports: [AuthModule, MemberModule, PartnerModule, ViewModule, ReservationModule, ReviewModule, CommentModule, AttractionModule],
 })
 export class ComponentsModule {}

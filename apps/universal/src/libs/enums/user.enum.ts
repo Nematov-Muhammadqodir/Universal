@@ -12,6 +12,7 @@ registerEnumType(GuestType, { name: 'GuestType' });
 
 export enum UserRole {
   HOTEL_OWNER = 'Hotel Owner',
+  ATTRACTION_OWNER = 'Attraction Owner',
   ADMIN = 'Admin',
   GUEST = 'Guest',
 }

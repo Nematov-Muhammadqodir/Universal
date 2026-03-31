@@ -37,6 +37,9 @@ export class Partner {
 
   @Field(() => GuestStatus)
   memberStatus: GuestStatus;
+
+  @Field(() => String, { nullable: true })
+  partnerType?: string;
 }
 
 @ObjectType()

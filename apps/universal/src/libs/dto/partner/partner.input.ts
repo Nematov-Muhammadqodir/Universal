@@ -30,6 +30,10 @@ export class PartnerInput {
   @IsOptional()
   @Field(() => UserRole, { nullable: true })
   userRole?: UserRole;
+
+  @IsOptional()
+  @Field(() => String, { nullable: true })
+  partnerType?: string;
 }
 
 @InputType()

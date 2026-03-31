@@ -30,6 +30,11 @@ const PartnerSchema = new Schema(
       default: UserRole.HOTEL_OWNER,
       required: true,
     },
+    partnerType: {
+      type: String,
+      enum: ['HOTEL_OWNER', 'ATTRACTION_OWNER'],
+      default: 'HOTEL_OWNER',
+    },
     memberStatus: {
       type: String,
       enum: GuestStatus,
