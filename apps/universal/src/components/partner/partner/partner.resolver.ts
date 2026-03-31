@@ -28,6 +28,7 @@ import { PartnerPropertyRoom } from 'apps/universal/src/libs/dto/partner/partner
 import { PartnerPropertyUpdate } from 'apps/universal/src/libs/dto/partner/partnerProperty/partnerProperty.update';
 import { AuthGuard } from '../../auth/guards/auth.guard';
 import { PartnerPropertyRoomUpdate } from 'apps/universal/src/libs/dto/partner/partnerProperty/partnerPropertyRoom/partnerPropertyRoom.update';
+import { OwnerReservations } from 'apps/universal/src/libs/dto/reservationInfo/reservationInfo.owner';
 
 @Resolver()
 export class PartnerResolver {
@@ -158,6 +159,28 @@ export class PartnerResolver {
     console.log('Mutation: updatePartnerPropertyRoom');
 
     return await this.partnerService.updatePartnerPropertyRoom(input, memberId);
+  }
+
+  @Roles(UserRole.HOTEL_OWNER)
+  @UseGuards(RolesGuard)
+  @Mutation(() => PartnerPropertyRoom)
+  public async deletePartnerPropertyRoom(
+    @Args('roomId') roomId: string,
+    @AuthMember('_id') memberId: ObjectId,
+  ): Promise<PartnerPropertyRoom> {
+    console.log('Mutation: deletePartnerPropertyRoom');
+    return await this.partnerService.deletePartnerPropertyRoom(roomId, memberId);
+  }
+
+  @Roles(UserRole.HOTEL_OWNER)
+  @UseGuards(RolesGuard)
+  @Query(() => OwnerReservations)
+  public async getOwnerReservations(
+    @Args('input') input: OrdinaryInquery,
+    @AuthMember('_id') memberId: ObjectId,
+  ): Promise<OwnerReservations> {
+    console.log('Query: getOwnerReservations');
+    return await this.partnerService.getOwnerReservations(memberId, input);
   }
 
   @UseGuards(AuthGuard)

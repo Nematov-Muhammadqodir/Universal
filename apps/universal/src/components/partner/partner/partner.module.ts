@@ -7,6 +7,7 @@ import { AuthModule } from '../../auth/auth.module';
 import PartnerPropertySchema from 'apps/universal/src/schemas/PartnerProperty';
 import { ViewModule } from '../../view/view.module';
 import PartnerPropertyRoomSchema from 'apps/universal/src/schemas/PartnerPropertyRoom';
+import ReservationInfoSchema from 'apps/universal/src/schemas/ReservationInfo.model';
 import { LikeModule } from '../../like/like.module';
 
 @Module({
@@ -15,6 +16,7 @@ import { LikeModule } from '../../like/like.module';
       { name: 'Partner', schema: PartnerSchema },
       { name: 'PartnerPropertySchema', schema: PartnerPropertySchema },
       { name: 'PartnerPropertyRoomSchema', schema: PartnerPropertyRoomSchema },
+      { name: 'ReservationInfoSchema', schema: ReservationInfoSchema },
     ]),
     AuthModule,
     ViewModule,

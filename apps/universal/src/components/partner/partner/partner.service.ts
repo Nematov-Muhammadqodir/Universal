@@ -35,6 +35,8 @@ import { PartnerPropertyRoomUpdate } from 'apps/universal/src/libs/dto/partner/p
 import { LikeInput } from 'apps/universal/src/libs/dto/like/like.input';
 import { LikeGroup } from 'apps/universal/src/libs/enums/like.enum';
 import { LikeService } from '../../like/like.service';
+import { ReservationInfo } from 'apps/universal/src/libs/dto/reservationInfo/reservationInfo';
+import { OwnerReservations } from 'apps/universal/src/libs/dto/reservationInfo/reservationInfo.owner';
 
 @Injectable()
 export class PartnerService {
@@ -44,6 +46,8 @@ export class PartnerService {
     private readonly partnerPropertyRoomModel: Model<PartnerPropertyRoom>,
     @InjectModel('PartnerPropertySchema')
     private readonly partnerPropertyModel: Model<PartnerProperty>,
+    @InjectModel('ReservationInfoSchema')
+    private readonly reservationModel: Model<ReservationInfo>,
     private authService: AuthService,
     private viewService: ViewService,
     private likeService: LikeService,
@@ -488,33 +492,55 @@ export class PartnerService {
       const room = await this.partnerPropertyRoomModel.findById(input._id);
       if (!room) throw new BadRequestException('Room not found');
 
-      const existingReservedDates = room.reservedDates || [];
+      const update: any = {};
 
-      const newReservedDates = input.reservedDates?.map((date) => ({
-        ...date,
-        userId: memberId.toString(),
-      }));
+      // Handle reserved dates (existing booking flow)
+      if (input.reservedDates?.length) {
+        const existingReservedDates = room.reservedDates || [];
+        const newReservedDates = input.reservedDates.map((date) => ({
+          ...date,
+          userId: memberId.toString(),
+        }));
 
-      if (!newReservedDates || newReservedDates.length === 0)
-        throw new BadRequestException('No new reservations provided');
-
-      for (const newDate of newReservedDates) {
-        const overlap = existingReservedDates.some(
-          (reserved) =>
-            reserved.from <= newDate.until && reserved.until >= newDate.from,
-        );
-        if (overlap) {
-          throw new BadRequestException(
-            `Room is not available from ${newDate.from.toISOString()} to ${newDate.until.toISOString()}`,
+        for (const newDate of newReservedDates) {
+          const overlap = existingReservedDates.some(
+            (reserved) =>
+              reserved.from <= newDate.until && reserved.until >= newDate.from,
           );
+          if (overlap) {
+            throw new BadRequestException(
+              `Room is not available from ${newDate.from.toISOString()} to ${newDate.until.toISOString()}`,
+            );
+          }
         }
+        update.$push = { reservedDates: { $each: newReservedDates } };
+      }
+
+      // Handle room field updates (dashboard editing)
+      const setFields: any = {};
+      const editableFields = [
+        'roomType', 'roomName', 'roomPricePerNight', 'numberOfGuestsCanStay',
+        'currentRoomTypeAmount', 'availableBeds', 'isSmokingAllowed',
+        'isBathroomPrivate', 'roomFacilities', 'availableBathroomFacilities',
+      ];
+
+      for (const field of editableFields) {
+        if (input[field] !== undefined && input[field] !== null) {
+          setFields[field] = input[field];
+        }
+      }
+
+      if (Object.keys(setFields).length > 0) {
+        update.$set = setFields;
+      }
+
+      if (!update.$push && !update.$set) {
+        throw new BadRequestException('No updates provided');
       }
 
       const result = await this.partnerPropertyRoomModel.findByIdAndUpdate(
         input._id,
-        {
-          $push: { reservedDates: { $each: newReservedDates } },
-        },
+        update,
         { new: true },
       );
 
@@ -523,6 +549,94 @@ export class PartnerService {
       console.log('Error, Service.model', err.message);
       throw new BadRequestException(err.message || Message.UPDATE_FAILED);
     }
+  }
+
+  public async deletePartnerPropertyRoom(
+    roomId: string,
+    memberId: ObjectId,
+  ): Promise<PartnerPropertyRoom> {
+    const room = await this.partnerPropertyRoomModel.findById(roomId).lean();
+    if (!room) throw new BadRequestException('Room not found');
+
+    // Verify ownership
+    const property = await this.partnerPropertyModel
+      .findOne({ _id: room.propertyId, partnerId: memberId })
+      .lean();
+    if (!property) throw new BadRequestException('Unauthorized: not your property');
+
+    const result = await this.partnerPropertyRoomModel.findByIdAndDelete(roomId);
+    return result;
+  }
+
+  public async getOwnerReservations(
+    memberId: ObjectId,
+    input: OrdinaryInquery,
+  ): Promise<OwnerReservations> {
+    const { page, limit } = input;
+
+    // Find the partner's property
+    const property = await this.partnerPropertyModel
+      .findOne({ partnerId: memberId })
+      .lean();
+    if (!property) throw new BadRequestException('No property found');
+
+    const propertyId = property._id.toString();
+
+    const data = await this.reservationModel.aggregate([
+      { $match: { propertyId } },
+      { $sort: { createdAt: -1 } },
+      {
+        $addFields: {
+          roomIdObj: { $toObjectId: '$roomId' },
+        },
+      },
+      {
+        $lookup: {
+          from: 'partnerPropertyRooms',
+          localField: 'roomIdObj',
+          foreignField: '_id',
+          as: 'roomInfo',
+        },
+      },
+      {
+        $unwind: {
+          path: '$roomInfo',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $facet: {
+          list: [
+            { $skip: (page - 1) * limit },
+            { $limit: limit },
+          ],
+          metaCounter: [{ $count: 'total' }],
+        },
+      },
+    ]);
+
+    return {
+      list: data[0].list.map((r: any) => ({
+        _id: r._id,
+        guestId: r.guestId,
+        guestName: r.guestName,
+        guestLastName: r.guestLastName,
+        guestEmail: r.guestEmail,
+        guestPhoneNumber: r.guestPhoneNumber,
+        paymentStatus: r.paymentStatus,
+        paymentAmount: r.paymentAmount,
+        roomId: r.roomId,
+        propertyId: r.propertyId,
+        startDate: r.startDate,
+        endDate: r.endDate,
+        roomType: r.roomInfo?.roomType,
+        roomName: r.roomInfo?.roomName,
+        roomPricePerNight: r.roomInfo?.roomPricePerNight,
+        createdAt: r.createdAt,
+        updatedAt: r.updatedAt,
+      })),
+      metaCounter: data[0].metaCounter,
+    };
   }
 
   public async getVisitedProperties(
