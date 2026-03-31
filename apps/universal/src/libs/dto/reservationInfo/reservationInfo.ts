@@ -24,14 +24,14 @@ export class ReservationInfo {
   @Field(() => Boolean)
   travelForWork: boolean;
 
-  @Field(() => String)
-  stripePaymentIntentId: string;
+  @Field(() => String, { nullable: true })
+  stripePaymentIntentId?: string;
 
-  @Field(() => String)
-  paymentStatus: string;
+  @Field(() => String, { nullable: true })
+  paymentStatus?: string;
 
-  @Field(() => Int)
-  paymentAmount: number;
+  @Field(() => Int, { nullable: true })
+  paymentAmount?: number;
 
   @Field(() => String)
   roomId: string;

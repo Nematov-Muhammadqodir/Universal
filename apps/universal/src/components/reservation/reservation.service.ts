@@ -163,6 +163,14 @@ export class ReservationService {
       },
     ]);
 
+    console.log('Aggregation raw result count:', data[0]?.list?.length);
+    console.log('MetaCounter:', data[0]?.metaCounter);
+    if (data[0]?.list?.length > 0) {
+      console.log('First item keys:', Object.keys(data[0].list[0]));
+      console.log('Has reservedProperty:', !!data[0].list[0].reservedProperty);
+      console.log('Has roomData:', !!data[0].list[0].roomData);
+    }
+
     const result: PartnerProperties = {
       list: data[0].list.map((ele) => ({
         ...ele.reservedProperty,
