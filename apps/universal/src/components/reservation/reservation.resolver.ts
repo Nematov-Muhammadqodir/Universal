@@ -20,13 +20,15 @@ export class ReservationResolver {
   constructor(private readonly reservationService: ReservationService) {}
 
   @UseGuards(AuthGuard)
-  @Mutation(() => StripePaymentIntent)
+  @Mutation(() => String)
   public async createPaymentIntent(
     @Args('input') input: CreatePaymentIntentInput,
     @AuthMember('_id') memberId: ObjectId,
-  ): Promise<StripePaymentIntent> {
+  ): Promise<string> {
     console.log('Mutation createPaymentIntent');
-    return await this.reservationService.createPaymentIntent(input);
+    const result = await this.reservationService.createPaymentIntent(input);
+    console.log('Resolver result:', result);
+    return result.clientSecret;
   }
 
   @Mutation(() => ReservationInfo)

@@ -36,33 +36,31 @@ export class ReservationService {
   public async createPaymentIntent(
     input: CreatePaymentIntentInput,
   ): Promise<StripePaymentIntent> {
-    try {
-      const { amount, roomId, propertyId } = input;
-      console.log('input', input);
+    const { amount, roomId, propertyId } = input;
+    console.log('input', input);
 
-      // Verify room exists
-      const exists = await this.partnerPropertyRoomModel
-        .findOne({ _id: new Types.ObjectId(roomId), propertyId: new Types.ObjectId(propertyId) })
-        .lean();
-      if (!exists) {
-        throw new BadRequestException(Message.ROOM_NOT_EXIST);
-      }
-
-      const paymentIntent = await this.stripe.paymentIntents.create({
-        amount: amount,
-        currency: 'krw',
-        metadata: {
-          roomId,
-          propertyId,
-        },
-      });
-
-      return { clientSecret: paymentIntent.client_secret };
-    } catch (err) {
-      console.log('Error, createPaymentIntent:', err.message);
-      console.log('Full error:', JSON.stringify(err, null, 2));
-      throw new BadRequestException(err.message);
+    // Verify room exists
+    const exists = await this.partnerPropertyRoomModel
+      .findOne({ _id: new Types.ObjectId(roomId), propertyId: new Types.ObjectId(propertyId) })
+      .lean();
+    if (!exists) {
+      throw new BadRequestException(Message.ROOM_NOT_EXIST);
     }
+
+    console.log('Room exists, creating Stripe payment intent...');
+    const paymentIntent = await this.stripe.paymentIntents.create({
+      amount: amount,
+      currency: 'krw',
+      payment_method_types: ['card'],
+      metadata: {
+        roomId,
+        propertyId,
+      },
+    });
+    console.log('Payment intent created:', paymentIntent.id);
+    console.log('client_secret value:', paymentIntent.client_secret);
+
+    return { clientSecret: paymentIntent.client_secret };
   }
 
   public async addReservationInfo(
@@ -71,7 +69,7 @@ export class ReservationService {
     try {
       const { roomId, propertyId, startDate, endDate } = input;
       const exists = await this.partnerPropertyRoomModel
-        .findOne({ _id: roomId, propertyId })
+        .findOne({ _id: new Types.ObjectId(roomId), propertyId: new Types.ObjectId(propertyId) })
         .lean();
       const bookedRoom = await this.reservationModel.findOne({
         roomId,
