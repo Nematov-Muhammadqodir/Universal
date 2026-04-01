@@ -234,6 +234,7 @@ export class PartnerService {
 
   public async getAllAvailableProperties(
     input: AvailablePropertiesSearchInput,
+    memberId?: ObjectId,
   ): Promise<PartnerProperty[]> {
     const {
       propertyRegion,
@@ -293,8 +294,8 @@ export class PartnerService {
       ]);
 
       if (!result.length) return [];
-      console.log('result[0]', result[0].list);
-      return result[0].list;
+      const properties = result[0].list;
+      return await this.attachMeLiked(properties, memberId);
     }
 
     // ✅ Otherwise, use region-based property search with room availability info
@@ -337,7 +338,7 @@ export class PartnerService {
     const fromDate = from ? new Date(from) : null;
     const untilDate = until ? new Date(until) : null;
 
-    return properties.map((property: any) => {
+    const enrichedProperties = properties.map((property: any) => {
       const rooms = allRooms
         .filter((r) => r.propertyId.toString() === property._id.toString())
         .filter((room) => {
@@ -373,6 +374,31 @@ export class PartnerService {
       }));
 
       return property;
+    });
+
+    return await this.attachMeLiked(enrichedProperties, memberId);
+  }
+
+  private async attachMeLiked(
+    properties: any[],
+    memberId?: ObjectId,
+  ): Promise<any[]> {
+    if (!memberId || !properties.length) return properties;
+
+    const propertyIds = properties.map((p) => p._id);
+    const likes = await this.likeService.checkLikesForProperties(
+      memberId,
+      propertyIds,
+    );
+
+    return properties.map((p) => {
+      const liked = likes.find(
+        (l) => l.likeRefId?.toString() === p._id?.toString(),
+      );
+      p.meLiked = liked
+        ? [{ memberId: memberId.toString(), likeRefId: p._id.toString(), myFavorite: true }]
+        : [];
+      return p;
     });
   }
 

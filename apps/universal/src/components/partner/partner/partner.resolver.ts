@@ -95,10 +95,11 @@ export class PartnerResolver {
   @Query(() => [PartnerProperty])
   public async getAllAvailableProperties(
     @Args('input') input: AvailablePropertiesSearchInput,
+    @AuthMember('_id') memberId: ObjectId,
   ): Promise<PartnerProperty[]> {
     console.log('Query: getAllAvailableProperties');
 
-    return await this.partnerService.getAllAvailableProperties(input);
+    return await this.partnerService.getAllAvailableProperties(input, memberId);
   }
 
   @UseGuards(WithoutGuard)

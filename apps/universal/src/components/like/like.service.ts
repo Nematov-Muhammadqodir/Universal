@@ -51,6 +51,19 @@ export class LikeService {
       : [];
   }
 
+  public async checkLikesForProperties(
+    memberId: ObjectId,
+    propertyIds: ObjectId[],
+  ): Promise<any[]> {
+    return await this.likeModel
+      .find({
+        memberId: memberId,
+        likeRefId: { $in: propertyIds },
+      })
+      .lean()
+      .exec();
+  }
+
   public async getFavoriteProperties(
     memberId: ObjectId,
     input: OrdinaryInquery,
