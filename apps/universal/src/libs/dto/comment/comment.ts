@@ -5,6 +5,7 @@ import { Guest, TotalCounter } from '../user/user';
 import { ReservationInfo } from '../reservationInfo/reservationInfo';
 import { PartnerProperty } from '../partner/partnerProperty/partnerProperty';
 import { PartnerPropertyRoom } from '../partner/partnerProperty/partnerPropertyRoom/partnerPropertyRoom';
+import { Attraction } from '../attraction/attraction';
 
 @ObjectType()
 export class Comment {
@@ -54,6 +55,9 @@ export class Comment {
 
   @Field(() => PartnerProperty, { nullable: true })
   propertyData?: PartnerProperty;
+
+  @Field(() => Attraction, { nullable: true })
+  attractionData?: Attraction;
 
   @Field(() => PartnerPropertyRoom, { nullable: true })
   roomData?: PartnerPropertyRoom;

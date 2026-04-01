@@ -176,6 +176,72 @@ export class CommentService {
     };
   }
 
+  public async getMyComments(
+    memberId: ObjectId,
+    input: { page: number; limit: number },
+  ): Promise<Comments> {
+    const { page, limit } = input;
+
+    const result = await this.commentModel
+      .aggregate([
+        { $match: { memberId: memberId, commentStatus: CommentStatus.ACTIVE } },
+        { $sort: { createdAt: -1 } },
+        {
+          $facet: {
+            list: [
+              { $skip: (page - 1) * limit },
+              { $limit: limit },
+              // Lookup property data
+              {
+                $lookup: {
+                  from: 'partnersProperties',
+                  let: { refId: '$commentRefId' },
+                  pipeline: [
+                    { $match: { $expr: { $eq: ['$_id', '$$refId'] } } },
+                    { $limit: 1 },
+                  ],
+                  as: 'propertyData',
+                },
+              },
+              {
+                $unwind: {
+                  path: '$propertyData',
+                  preserveNullAndEmptyArrays: true,
+                },
+              },
+              // Lookup attraction data
+              {
+                $lookup: {
+                  from: 'attractions',
+                  let: { refId: '$commentRefId' },
+                  pipeline: [
+                    { $match: { $expr: { $eq: ['$_id', '$$refId'] } } },
+                    { $limit: 1 },
+                  ],
+                  as: 'attractionData',
+                },
+              },
+              {
+                $unwind: {
+                  path: '$attractionData',
+                  preserveNullAndEmptyArrays: true,
+                },
+              },
+              lookupMember,
+              { $unwind: { path: '$memberData', preserveNullAndEmptyArrays: true } },
+            ],
+            metaCounter: [{ $count: 'total' }],
+          },
+        },
+      ])
+      .exec();
+
+    return {
+      list: result[0]?.list ?? [],
+      metaCounter: result[0]?.metaCounter ?? [],
+    };
+  }
+
   public async likeComment(
     memberId: ObjectId,
     commentId: ObjectId,

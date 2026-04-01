@@ -6,6 +6,7 @@ import {
   CommentInput,
   CommentsInquiry,
 } from '../../libs/dto/comment/comment.input';
+import { OrdinaryInquery } from '../../libs/dto/partner/partnerProperty/partnerProperty.input';
 import { ObjectId } from 'mongoose';
 import { AuthMember } from '../auth/decorators/authMember.decorator';
 import { Comment, Comments } from '../../libs/dto/comment/comment';
@@ -62,6 +63,16 @@ export class CommentResolver {
       memberId,
       shapeIntoMongoObjectId(commentId),
     );
+  }
+
+  @UseGuards(AuthGuard)
+  @Query((returns) => Comments)
+  public async getMyComments(
+    @Args('input') input: OrdinaryInquery,
+    @AuthMember('_id') memberId: ObjectId,
+  ): Promise<Comments> {
+    console.log('Query: getMyComments');
+    return await this.commentService.getMyComments(memberId, input);
   }
 
   @UseGuards(WithoutGuard)
