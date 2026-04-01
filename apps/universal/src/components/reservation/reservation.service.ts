@@ -3,8 +3,11 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model, ObjectId } from 'mongoose';
 import {
   ReservationInfo,
+  RevenueDataPoint,
   StripePaymentIntent,
 } from '../../libs/dto/reservationInfo/reservationInfo';
+import { UpdateReservationStatusInput } from '../../libs/dto/reservationInfo/reservationInfo.update';
+import { NotificationService } from '../notification/notification.service';
 import {
   CreatePaymentIntentInput,
   ReservationInfoInput,
@@ -36,6 +39,7 @@ export class ReservationService {
     @InjectModel('AttractionReservation')
     private readonly attractionReservationModel: Model<AttractionReservation>,
     private partnerService: PartnerService,
+    private notificationService: NotificationService,
   ) {
     this.stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
   }
@@ -285,5 +289,217 @@ export class ReservationService {
       console.log('Error, addAttractionReservation:', err.message);
       throw new BadRequestException(Message.CREATE_FAILED);
     }
+  }
+
+  // ==================== STATUS MANAGEMENT ====================
+
+  public async updateReservationStatus(
+    input: UpdateReservationStatusInput,
+  ): Promise<ReservationInfo> {
+    const result = await this.reservationModel
+      .findByIdAndUpdate(
+        input.reservationId,
+        { $set: { reservationStatus: input.reservationStatus } },
+        { new: true },
+      )
+      .exec();
+    if (!result) throw new BadRequestException(Message.NO_DATA_FOUND);
+
+    // Send notification to guest
+    const statusMap: Record<string, string> = {
+      CONFIRMED: 'RESERVATION_CONFIRMED',
+      CANCELLED: 'RESERVATION_CANCELLED',
+    };
+    const titleMap: Record<string, string> = {
+      CONFIRMED: 'Reservation Confirmed',
+      CANCELLED: 'Reservation Cancelled',
+    };
+    const messageMap: Record<string, string> = {
+      CONFIRMED: `Your hotel reservation for ${result.startDate} has been confirmed.`,
+      CANCELLED: `Your hotel reservation for ${result.startDate} has been cancelled by the property owner.`,
+    };
+
+    if (statusMap[input.reservationStatus]) {
+      await this.notificationService.createNotification({
+        receiverId: result.guestId,
+        notificationType: statusMap[input.reservationStatus],
+        notificationTitle: titleMap[input.reservationStatus],
+        notificationMessage: messageMap[input.reservationStatus],
+        notificationRefId: result._id as any,
+      });
+    }
+
+    return result;
+  }
+
+  public async updateAttractionReservationStatus(
+    input: UpdateReservationStatusInput,
+  ): Promise<AttractionReservation> {
+    const result = await this.attractionReservationModel
+      .findByIdAndUpdate(
+        input.reservationId,
+        { $set: { reservationStatus: input.reservationStatus } },
+        { new: true },
+      )
+      .exec();
+    if (!result) throw new BadRequestException(Message.NO_DATA_FOUND);
+
+    const statusMap: Record<string, string> = {
+      CONFIRMED: 'RESERVATION_CONFIRMED',
+      CANCELLED: 'RESERVATION_CANCELLED',
+    };
+    const titleMap: Record<string, string> = {
+      CONFIRMED: 'Booking Confirmed',
+      CANCELLED: 'Booking Cancelled',
+    };
+    const messageMap: Record<string, string> = {
+      CONFIRMED: `Your attraction booking for ${(result as any).selectedDate} at ${(result as any).selectedTime} has been confirmed.`,
+      CANCELLED: `Your attraction booking for ${(result as any).selectedDate} has been cancelled by the attraction owner.`,
+    };
+
+    if (statusMap[input.reservationStatus]) {
+      await this.notificationService.createNotification({
+        receiverId: (result as any).guestId,
+        notificationType: statusMap[input.reservationStatus],
+        notificationTitle: titleMap[input.reservationStatus],
+        notificationMessage: messageMap[input.reservationStatus],
+        notificationRefId: result._id as any,
+      });
+    }
+
+    return result;
+  }
+
+  // ==================== REFUND ====================
+
+  public async refundReservation(reservationId: string): Promise<ReservationInfo> {
+    const reservation = await this.reservationModel.findById(reservationId).exec();
+    if (!reservation) throw new BadRequestException(Message.NO_DATA_FOUND);
+
+    if (!reservation.stripePaymentIntentId) {
+      throw new BadRequestException('No payment to refund');
+    }
+
+    try {
+      await this.stripe.refunds.create({
+        payment_intent: reservation.stripePaymentIntentId,
+      });
+    } catch (err) {
+      console.log('Stripe refund error:', err.message);
+      throw new BadRequestException('Refund failed: ' + err.message);
+    }
+
+    const result = await this.reservationModel
+      .findByIdAndUpdate(
+        reservationId,
+        { $set: { reservationStatus: 'REFUNDED', paymentStatus: 'refunded' } },
+        { new: true },
+      )
+      .exec();
+
+    await this.notificationService.createNotification({
+      receiverId: result.guestId,
+      notificationType: 'RESERVATION_REFUNDED',
+      notificationTitle: 'Refund Processed',
+      notificationMessage: `Your hotel reservation payment of ${result.paymentAmount} KRW has been refunded.`,
+      notificationRefId: result._id as any,
+    });
+
+    return result;
+  }
+
+  public async refundAttractionReservation(reservationId: string): Promise<AttractionReservation> {
+    const reservation = await this.attractionReservationModel.findById(reservationId).exec();
+    if (!reservation) throw new BadRequestException(Message.NO_DATA_FOUND);
+
+    if (!reservation.stripePaymentIntentId) {
+      throw new BadRequestException('No payment to refund');
+    }
+
+    try {
+      await this.stripe.refunds.create({
+        payment_intent: reservation.stripePaymentIntentId,
+      });
+    } catch (err) {
+      console.log('Stripe refund error:', err.message);
+      throw new BadRequestException('Refund failed: ' + err.message);
+    }
+
+    const result = await this.attractionReservationModel
+      .findByIdAndUpdate(
+        reservationId,
+        { $set: { reservationStatus: 'REFUNDED', paymentStatus: 'refunded' } },
+        { new: true },
+      )
+      .exec();
+
+    await this.notificationService.createNotification({
+      receiverId: (result as any).guestId,
+      notificationType: 'RESERVATION_REFUNDED',
+      notificationTitle: 'Refund Processed',
+      notificationMessage: `Your attraction booking payment of ${(result as any).paymentAmount} KRW has been refunded.`,
+      notificationRefId: result._id as any,
+    });
+
+    return result;
+  }
+
+  // ==================== REVENUE ANALYTICS ====================
+
+  public async getRevenueAnalytics(partnerId: ObjectId): Promise<RevenueDataPoint[]> {
+    // Hotel revenue
+    const hotelRevenue = await this.reservationModel.aggregate([
+      { $match: { paymentStatus: 'succeeded', reservationStatus: { $ne: 'REFUNDED' } } },
+      {
+        $lookup: {
+          from: 'partnersProperties',
+          let: { propId: { $toObjectId: '$propertyId' } },
+          pipeline: [{ $match: { $expr: { $eq: ['$_id', '$$propId'] } } }],
+          as: 'property',
+        },
+      },
+      { $unwind: '$property' },
+      { $match: { 'property.partnerId': new Types.ObjectId(partnerId.toString()) } },
+      {
+        $group: {
+          _id: { $dateToString: { format: '%Y-%m', date: '$createdAt' } },
+          revenue: { $sum: '$paymentAmount' },
+        },
+      },
+      { $sort: { _id: 1 } },
+    ]);
+
+    // Attraction revenue
+    const attractionRevenue = await this.attractionReservationModel.aggregate([
+      { $match: { paymentStatus: 'succeeded', reservationStatus: { $ne: 'REFUNDED' } } },
+      {
+        $lookup: {
+          from: 'attractions',
+          localField: 'attractionId',
+          foreignField: '_id',
+          as: 'attraction',
+        },
+      },
+      { $unwind: '$attraction' },
+      { $match: { 'attraction.partnerId': new Types.ObjectId(partnerId.toString()) } },
+      {
+        $group: {
+          _id: { $dateToString: { format: '%Y-%m', date: '$createdAt' } },
+          revenue: { $sum: '$paymentAmount' },
+        },
+      },
+      { $sort: { _id: 1 } },
+    ]);
+
+    // Merge both
+    const revenueMap = new Map<string, number>();
+    for (const item of [...hotelRevenue, ...attractionRevenue]) {
+      revenueMap.set(item._id, (revenueMap.get(item._id) || 0) + item.revenue);
+    }
+
+    return Array.from(revenueMap.entries())
+      .sort(([a], [b]) => a.localeCompare(b))
+      .slice(-12)
+      .map(([month, revenue]) => ({ month, revenue }));
   }
 }

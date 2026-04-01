@@ -48,11 +48,23 @@ export class ReservationInfo {
   @Field(() => Boolean)
   ageConfirmation: boolean;
 
+  @Field(() => String, { nullable: true })
+  reservationStatus?: string;
+
   @Field(() => Date)
   createdAt: Date;
 
   @Field(() => Date)
   updatedAt: Date;
+}
+
+@ObjectType()
+export class RevenueDataPoint {
+  @Field(() => String)
+  month: string;
+
+  @Field(() => Int)
+  revenue: number;
 }
 
 @ObjectType()

@@ -2,8 +2,10 @@ import { Args, Mutation, Resolver, Query } from '@nestjs/graphql';
 import { ReservationService } from './reservation.service';
 import {
   ReservationInfo,
+  RevenueDataPoint,
   StripePaymentIntent,
 } from '../../libs/dto/reservationInfo/reservationInfo';
+import { UpdateReservationStatusInput } from '../../libs/dto/reservationInfo/reservationInfo.update';
 import {
   CreatePaymentIntentInput,
   ReservationInfoInput,
@@ -92,5 +94,60 @@ export class ReservationResolver {
   ): Promise<AttractionReservation> {
     console.log('Mutation addAttractionReservation');
     return await this.reservationService.addAttractionReservation(input);
+  }
+
+  // ==================== STATUS MANAGEMENT ====================
+
+  @UseGuards(AuthGuard)
+  @Mutation(() => ReservationInfo)
+  public async updateReservationStatus(
+    @Args('input') input: UpdateReservationStatusInput,
+    @AuthMember('_id') memberId: ObjectId,
+  ): Promise<ReservationInfo> {
+    console.log('Mutation updateReservationStatus');
+    return await this.reservationService.updateReservationStatus(input);
+  }
+
+  @UseGuards(AuthGuard)
+  @Mutation(() => AttractionReservation)
+  public async updateAttractionReservationStatus(
+    @Args('input') input: UpdateReservationStatusInput,
+    @AuthMember('_id') memberId: ObjectId,
+  ): Promise<AttractionReservation> {
+    console.log('Mutation updateAttractionReservationStatus');
+    return await this.reservationService.updateAttractionReservationStatus(input);
+  }
+
+  // ==================== REFUND ====================
+
+  @UseGuards(AuthGuard)
+  @Mutation(() => ReservationInfo)
+  public async refundReservation(
+    @Args('reservationId') reservationId: string,
+    @AuthMember('_id') memberId: ObjectId,
+  ): Promise<ReservationInfo> {
+    console.log('Mutation refundReservation');
+    return await this.reservationService.refundReservation(reservationId);
+  }
+
+  @UseGuards(AuthGuard)
+  @Mutation(() => AttractionReservation)
+  public async refundAttractionReservation(
+    @Args('reservationId') reservationId: string,
+    @AuthMember('_id') memberId: ObjectId,
+  ): Promise<AttractionReservation> {
+    console.log('Mutation refundAttractionReservation');
+    return await this.reservationService.refundAttractionReservation(reservationId);
+  }
+
+  // ==================== REVENUE ANALYTICS ====================
+
+  @UseGuards(AuthGuard)
+  @Query(() => [RevenueDataPoint])
+  public async getRevenueAnalytics(
+    @AuthMember('_id') memberId: ObjectId,
+  ): Promise<RevenueDataPoint[]> {
+    console.log('Query getRevenueAnalytics');
+    return await this.reservationService.getRevenueAnalytics(memberId);
   }
 }

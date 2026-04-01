@@ -48,6 +48,12 @@ export class OwnerReservation {
   @Field(() => String, { nullable: true })
   roomPricePerNight?: string;
 
+  @Field(() => String, { nullable: true })
+  reservationStatus?: string;
+
+  @Field(() => String, { nullable: true })
+  stripePaymentIntentId?: string;
+
   @Field(() => Date)
   createdAt: Date;
 

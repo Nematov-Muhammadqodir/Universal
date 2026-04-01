@@ -658,6 +658,8 @@ export class PartnerService {
         roomType: r.roomInfo?.roomType,
         roomName: r.roomInfo?.roomName,
         roomPricePerNight: r.roomInfo?.roomPricePerNight,
+        reservationStatus: r.reservationStatus || 'CONFIRMED',
+        stripePaymentIntentId: r.stripePaymentIntentId,
         createdAt: r.createdAt,
         updatedAt: r.updatedAt,
       })),

@@ -7,8 +7,10 @@ import { ReservationModule } from './reservation/reservation.module';
 import { ReviewModule } from './review/review.module';
 import { CommentModule } from './comment/comment.module';
 import { AttractionModule } from './attraction/attraction.module';
+import { NotificationModule } from './notification/notification.module';
+import { MessageModule } from './message/message.module';
 
 @Module({
-  imports: [AuthModule, MemberModule, PartnerModule, ViewModule, ReservationModule, ReviewModule, CommentModule, AttractionModule],
+  imports: [AuthModule, MemberModule, PartnerModule, ViewModule, ReservationModule, ReviewModule, CommentModule, AttractionModule, NotificationModule, MessageModule],
 })
 export class ComponentsModule {}

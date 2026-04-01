@@ -35,6 +35,7 @@ const ReservationInfoSchema = new Schema<IReservationInfo>(
     startDate: { type: String, required: true },
     endDate: { type: String, required: true },
     ageConfirmation: { type: Boolean, required: true },
+    reservationStatus: { type: String, enum: ['PENDING', 'CONFIRMED', 'CANCELLED', 'REFUNDED'], default: 'CONFIRMED' },
   },
   { timestamps: true },
 );

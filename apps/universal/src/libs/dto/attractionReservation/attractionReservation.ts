@@ -43,6 +43,9 @@ export class AttractionReservation {
   @Field(() => Int)
   paymentAmount: number;
 
+  @Field(() => String, { nullable: true })
+  reservationStatus?: string;
+
   @Field(() => Attraction, { nullable: true })
   attractionData?: Attraction;
 

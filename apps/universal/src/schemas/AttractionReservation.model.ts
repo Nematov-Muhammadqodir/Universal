@@ -14,6 +14,7 @@ const AttractionReservationSchema = new Schema(
     stripePaymentIntentId: { type: String },
     paymentStatus: { type: String, default: 'pending' },
     paymentAmount: { type: Number, required: true },
+    reservationStatus: { type: String, enum: ['PENDING', 'CONFIRMED', 'CANCELLED', 'REFUNDED'], default: 'CONFIRMED' },
   },
   { timestamps: true, collection: 'attractionReservations' },
 );

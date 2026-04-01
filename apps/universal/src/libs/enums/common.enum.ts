@@ -34,3 +34,11 @@ export enum Direction {
   DESC = -1,
 }
 registerEnumType(Direction, { name: 'Direction' });
+
+export enum ReservationStatus {
+  PENDING = 'PENDING',
+  CONFIRMED = 'CONFIRMED',
+  CANCELLED = 'CANCELLED',
+  REFUNDED = 'REFUNDED',
+}
+registerEnumType(ReservationStatus, { name: 'ReservationStatus' });

@@ -6,6 +6,7 @@ import AttractionReservationSchema from '../../schemas/AttractionReservation.mod
 import { MongooseModule } from '@nestjs/mongoose';
 import { AuthModule } from '../auth/auth.module';
 import { PartnerModule } from '../partner/partner/partner.module';
+import { NotificationModule } from '../notification/notification.module';
 import PartnerPropertyRoomSchema from '../../schemas/PartnerPropertyRoom';
 
 @Module({
@@ -17,6 +18,7 @@ import PartnerPropertyRoomSchema from '../../schemas/PartnerPropertyRoom';
     ]),
     AuthModule,
     PartnerModule,
+    NotificationModule,
   ],
   providers: [ReservationResolver, ReservationService],
   exports: [ReservationService],
