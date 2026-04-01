@@ -16,6 +16,7 @@ import { Message } from 'apps/universal/src/libs/enums/common.enum';
 import { AttractionStatus } from 'apps/universal/src/libs/enums/attraction.enum';
 import { T } from 'apps/universal/src/libs/types/common';
 import { shapeIntoMongoObjectId } from 'apps/universal/src/libs/config';
+import { LikeService } from '../like/like.service';
 
 @Injectable()
 export class AttractionService {
@@ -24,6 +25,7 @@ export class AttractionService {
     private readonly attractionModel: Model<Attraction>,
     @InjectModel('Partner')
     private readonly partnerModel: Model<Partner>,
+    private readonly likeService: LikeService,
   ) {}
 
   public async createAttraction(input: AttractionInput): Promise<Attraction> {
@@ -64,7 +66,7 @@ export class AttractionService {
     }
   }
 
-  public async getAttraction(attractionId: ObjectId): Promise<Attraction> {
+  public async getAttraction(attractionId: ObjectId, memberId?: ObjectId): Promise<Attraction> {
     const targetAttraction: any = await this.attractionModel
       .findOne({ _id: attractionId, attractionStatus: AttractionStatus.ACTIVE })
       .lean()
@@ -78,13 +80,19 @@ export class AttractionService {
       .lean()
       .exec();
 
+    if (memberId) {
+      const likeInput = { memberId, likeRefId: attractionId };
+      targetAttraction.meLiked = await this.likeService.checkLikeExistance(likeInput as any);
+    }
+
     return targetAttraction;
   }
 
   public async getAllAttractions(
     input: AttractionsInquiry,
+    memberId?: ObjectId,
   ): Promise<Attractions> {
-    const { page, limit, attractionType, attractionCity, attractionCountry } = input;
+    const { page, limit, attractionType, attractionCity, attractionCountry, sort } = input;
 
     const match: T = { attractionStatus: AttractionStatus.ACTIVE };
 
@@ -98,8 +106,18 @@ export class AttractionService {
       match.attractionCountry = attractionCountry;
     }
 
+    let sortStage: T = { attractionViews: -1 }; // default: top picks (most views)
+    if (sort === 'PRICE_LOW') {
+      sortStage = { attractionAdultPrice: 1 };
+    } else if (sort === 'PRICE_HIGH') {
+      sortStage = { attractionAdultPrice: -1 };
+    } else if (sort === 'NEWEST') {
+      sortStage = { createdAt: -1 };
+    }
+
     const result = await this.attractionModel.aggregate([
       { $match: match },
+      { $sort: sortStage },
       {
         $facet: {
           list: [
@@ -114,7 +132,22 @@ export class AttractionService {
     if (!result.length)
       throw new InternalServerErrorException(Message.NO_DATA_FOUND);
 
-    return result[0];
+    const attractions: Attractions = result[0];
+
+    if (memberId && attractions.list.length > 0) {
+      const attractionIds = attractions.list.map((a: any) => a._id);
+      const likes = await this.likeService.checkLikesForProperties(memberId, attractionIds);
+      const likedMap = new Set(likes.map((l: any) => l.likeRefId.toString()));
+
+      attractions.list = attractions.list.map((a: any) => ({
+        ...a,
+        meLiked: likedMap.has(a._id.toString())
+          ? [{ memberId, likeRefId: a._id, myFavorite: true }]
+          : [],
+      }));
+    }
+
+    return attractions;
   }
 
   public async getAttractionsByOwner(
@@ -144,6 +177,22 @@ export class AttractionService {
     const result = await this.attractionModel.findByIdAndDelete(targetId);
     if (!result) throw new InternalServerErrorException(Message.REMOVE_FAILED);
 
+    return result;
+  }
+
+  public async likeTargetAttraction(
+    attractionId: ObjectId,
+    modifier: number,
+  ): Promise<Attraction> {
+    const result = await this.attractionModel
+      .findByIdAndUpdate(
+        attractionId,
+        { $inc: { attractionLikes: modifier } },
+        { new: true },
+      )
+      .exec();
+
+    if (!result) throw new InternalServerErrorException(Message.NO_DATA_FOUND);
     return result;
   }
 }

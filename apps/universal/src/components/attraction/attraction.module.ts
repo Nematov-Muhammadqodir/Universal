@@ -5,6 +5,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import AttractionSchema from 'apps/universal/src/schemas/Attraction.model';
 import PartnerSchema from 'apps/universal/src/schemas/Partner.model';
 import { AuthModule } from '../auth/auth.module';
+import { LikeModule } from '../like/like.module';
 
 @Module({
   imports: [
@@ -13,6 +14,7 @@ import { AuthModule } from '../auth/auth.module';
       { name: 'Partner', schema: PartnerSchema },
     ]),
     AuthModule,
+    LikeModule,
   ],
   providers: [AttractionResolver, AttractionService],
   exports: [AttractionService],

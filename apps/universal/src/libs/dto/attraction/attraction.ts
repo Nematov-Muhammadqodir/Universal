@@ -2,6 +2,7 @@ import { Field, Int, ObjectType, Float } from '@nestjs/graphql';
 import { ObjectId } from 'mongoose';
 import { TotalCounter } from '../user/user';
 import { Partner } from '../partner/partner';
+import { MeLiked } from '../like/like';
 import { AttractionStatus, AttractionType } from '../../enums/attraction.enum';
 
 @ObjectType()
@@ -92,6 +93,9 @@ export class Attraction {
 
   @Field(() => Partner, { nullable: true })
   memberData?: Partner;
+
+  @Field(() => [MeLiked], { nullable: true })
+  meLiked?: MeLiked[];
 }
 
 @ObjectType()

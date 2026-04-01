@@ -181,4 +181,8 @@ export class AttractionsInquiry {
   @IsOptional()
   @Field(() => String, { nullable: true })
   attractionCountry?: string;
+
+  @IsOptional()
+  @Field(() => String, { nullable: true })
+  sort?: string;
 }
