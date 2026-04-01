@@ -75,6 +75,30 @@ export class MemberResolver {
     return await this.memberService.updateGuest(guestId, input);
   }
 
+  @UseGuards(AuthGuard)
+  @Mutation(() => Guest)
+  public async changePassword(
+    @Args('oldPassword') oldPassword: string,
+    @Args('newPassword') newPassword: string,
+    @AuthMember('_id') guestId: ObjectId,
+  ): Promise<Guest> {
+    console.log('Mutation: changePassword');
+    return await this.memberService.changePassword(
+      guestId,
+      oldPassword,
+      newPassword,
+    );
+  }
+
+  @UseGuards(AuthGuard)
+  @Mutation(() => Guest)
+  public async deleteAccount(
+    @AuthMember('_id') guestId: ObjectId,
+  ): Promise<Guest> {
+    console.log('Mutation: deleteAccount');
+    return await this.memberService.deleteAccount(guestId);
+  }
+
   @UseGuards(WithoutGuard)
   @Query(() => Guest)
   public async getGuestProfile(

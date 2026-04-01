@@ -228,7 +228,12 @@ export class CommentService {
                 },
               },
               lookupMember,
-              { $unwind: { path: '$memberData', preserveNullAndEmptyArrays: true } },
+              {
+                $unwind: {
+                  path: '$memberData',
+                  preserveNullAndEmptyArrays: true,
+                },
+              },
             ],
             metaCounter: [{ $count: 'total' }],
           },
@@ -251,7 +256,9 @@ export class CommentService {
 
     const memberIdStr = memberId.toString();
     const alreadyLiked = comment.likedBy?.map(String).includes(memberIdStr);
-    const alreadyDisliked = comment.dislikedBy?.map(String).includes(memberIdStr);
+    const alreadyDisliked = comment.dislikedBy
+      ?.map(String)
+      .includes(memberIdStr);
 
     const update: any = {};
 
@@ -308,7 +315,9 @@ export class CommentService {
 
     const memberIdStr = memberId.toString();
     const alreadyLiked = comment.likedBy?.map(String).includes(memberIdStr);
-    const alreadyDisliked = comment.dislikedBy?.map(String).includes(memberIdStr);
+    const alreadyDisliked = comment.dislikedBy
+      ?.map(String)
+      .includes(memberIdStr);
 
     if (alreadyDisliked) {
       // Remove dislike (toggle off)

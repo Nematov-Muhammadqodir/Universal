@@ -90,6 +90,50 @@ export class MemberService {
     return result;
   }
 
+  public async changePassword(
+    guestId: ObjectId,
+    oldPassword: string,
+    newPassword: string,
+  ): Promise<Guest> {
+    const guest = await this.guestModel
+      .findById(guestId)
+      .select('+guestPassword')
+      .exec();
+    if (!guest) throw new BadRequestException(Message.NO_DATA_FOUND);
+
+    const isMatch = await this.authService.comparePassword(
+      oldPassword,
+      guest.guestPassword,
+    );
+    if (!isMatch) throw new BadRequestException('Current password is incorrect');
+
+    const hashedPassword = await this.authService.hashPassword(newPassword);
+    const result = await this.guestModel
+      .findByIdAndUpdate(
+        guestId,
+        { guestPassword: hashedPassword },
+        { new: true },
+      )
+      .exec();
+
+    if (!result) throw new InternalServerErrorException(Message.UPDATE_FAILED);
+    result.accessToken = await this.authService.createToken(result);
+    return result;
+  }
+
+  public async deleteAccount(guestId: ObjectId): Promise<Guest> {
+    const result = await this.guestModel
+      .findByIdAndUpdate(
+        guestId,
+        { guestStatus: GuestStatus.DELETE },
+        { new: true },
+      )
+      .exec();
+
+    if (!result) throw new InternalServerErrorException(Message.REMOVE_FAILED);
+    return result;
+  }
+
   public async getGuestProfile(
     memberId: ObjectId,
     targetId: ObjectId,
