@@ -76,6 +76,15 @@ export class ReservationResolver {
   }
 
   @UseGuards(AuthGuard)
+  @Query(() => [AttractionReservation])
+  public async getOwnerAttractionReservations(
+    @AuthMember('_id') memberId: ObjectId,
+  ): Promise<AttractionReservation[]> {
+    console.log('Query: getOwnerAttractionReservations');
+    return await this.reservationService.getOwnerAttractionReservations(memberId);
+  }
+
+  @UseGuards(AuthGuard)
   @Mutation(() => AttractionReservation)
   public async addAttractionReservation(
     @Args('input') input: AttractionReservationInput,

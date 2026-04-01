@@ -255,6 +255,26 @@ export class ReservationService {
       .exec();
   }
 
+  public async getOwnerAttractionReservations(
+    partnerId: ObjectId,
+  ): Promise<AttractionReservation[]> {
+    return await this.attractionReservationModel
+      .aggregate([
+        {
+          $lookup: {
+            from: 'attractions',
+            localField: 'attractionId',
+            foreignField: '_id',
+            as: 'attractionData',
+          },
+        },
+        { $unwind: { path: '$attractionData', preserveNullAndEmptyArrays: true } },
+        { $match: { 'attractionData.partnerId': new Types.ObjectId(partnerId.toString()) } },
+        { $sort: { createdAt: -1 } },
+      ])
+      .exec();
+  }
+
   public async addAttractionReservation(
     input: AttractionReservationInput,
   ): Promise<AttractionReservation> {
