@@ -9,6 +9,11 @@ import {
   CreatePaymentIntentInput,
   ReservationInfoInput,
 } from '../../libs/dto/reservationInfo/reservationInfo.input';
+import { AttractionReservation } from '../../libs/dto/attractionReservation/attractionReservation';
+import {
+  AttractionReservationInput,
+  CreateAttractionPaymentIntentInput,
+} from '../../libs/dto/attractionReservation/attractionReservation.input';
 import { Message } from '../../libs/enums/common.enum';
 import { PartnerService } from '../partner/partner/partner.service';
 import { PartnerPropertyRoom } from '../../libs/dto/partner/partnerProperty/partnerPropertyRoom/partnerPropertyRoom';
@@ -28,6 +33,8 @@ export class ReservationService {
     private readonly reservationModel: Model<ReservationInfo>,
     @InjectModel('PartnerPropertyRoomSchema')
     private readonly partnerPropertyRoomModel: Model<PartnerPropertyRoom>,
+    @InjectModel('AttractionReservation')
+    private readonly attractionReservationModel: Model<AttractionReservation>,
     private partnerService: PartnerService,
   ) {
     this.stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
@@ -211,5 +218,52 @@ export class ReservationService {
     };
 
     return result;
+  }
+
+  public async createAttractionPaymentIntent(
+    input: CreateAttractionPaymentIntentInput,
+  ): Promise<StripePaymentIntent> {
+    const { amount, attractionId } = input;
+
+    const paymentIntent = await this.stripe.paymentIntents.create({
+      amount,
+      currency: 'krw',
+      payment_method_types: ['card'],
+      metadata: { attractionId },
+    });
+
+    return { clientSecret: paymentIntent.client_secret };
+  }
+
+  public async getAttractionReservations(
+    memberId: ObjectId,
+  ): Promise<AttractionReservation[]> {
+    return await this.attractionReservationModel
+      .aggregate([
+        { $match: { guestId: new Types.ObjectId(memberId.toString()) } },
+        { $sort: { createdAt: -1 } },
+        {
+          $lookup: {
+            from: 'attractions',
+            localField: 'attractionId',
+            foreignField: '_id',
+            as: 'attractionData',
+          },
+        },
+        { $unwind: { path: '$attractionData', preserveNullAndEmptyArrays: true } },
+      ])
+      .exec();
+  }
+
+  public async addAttractionReservation(
+    input: AttractionReservationInput,
+  ): Promise<AttractionReservation> {
+    try {
+      const result = await this.attractionReservationModel.create(input);
+      return result;
+    } catch (err) {
+      console.log('Error, addAttractionReservation:', err.message);
+      throw new BadRequestException(Message.CREATE_FAILED);
+    }
   }
 }

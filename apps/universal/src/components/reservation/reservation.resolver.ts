@@ -8,6 +8,11 @@ import {
   CreatePaymentIntentInput,
   ReservationInfoInput,
 } from '../../libs/dto/reservationInfo/reservationInfo.input';
+import { AttractionReservation } from '../../libs/dto/attractionReservation/attractionReservation';
+import {
+  AttractionReservationInput,
+  CreateAttractionPaymentIntentInput,
+} from '../../libs/dto/attractionReservation/attractionReservation.input';
 import { ObjectId } from 'mongoose';
 import { AuthMember } from '../auth/decorators/authMember.decorator';
 import { AuthGuard } from '../auth/guards/auth.guard';
@@ -48,5 +53,35 @@ export class ReservationResolver {
   ): Promise<PartnerProperties> {
     console.log('Query: getReservedRooms');
     return await this.reservationService.getReservedRooms(memberId, input);
+  }
+
+  @UseGuards(AuthGuard)
+  @Mutation(() => String)
+  public async createAttractionPaymentIntent(
+    @Args('input') input: CreateAttractionPaymentIntentInput,
+    @AuthMember('_id') memberId: ObjectId,
+  ): Promise<string> {
+    console.log('Mutation createAttractionPaymentIntent');
+    const result = await this.reservationService.createAttractionPaymentIntent(input);
+    return result.clientSecret;
+  }
+
+  @UseGuards(AuthGuard)
+  @Query(() => [AttractionReservation])
+  public async getAttractionReservations(
+    @AuthMember('_id') memberId: ObjectId,
+  ): Promise<AttractionReservation[]> {
+    console.log('Query: getAttractionReservations');
+    return await this.reservationService.getAttractionReservations(memberId);
+  }
+
+  @UseGuards(AuthGuard)
+  @Mutation(() => AttractionReservation)
+  public async addAttractionReservation(
+    @Args('input') input: AttractionReservationInput,
+    @AuthMember('_id') memberId: ObjectId,
+  ): Promise<AttractionReservation> {
+    console.log('Mutation addAttractionReservation');
+    return await this.reservationService.addAttractionReservation(input);
   }
 }
