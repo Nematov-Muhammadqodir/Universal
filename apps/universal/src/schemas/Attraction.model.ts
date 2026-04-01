@@ -34,6 +34,10 @@ const AttractionSchema = new Schema(
     attractionLikes: { type: Number, default: 0 },
     totalReviews: { type: Number, default: 0 },
     averageRating: { type: Number, default: 0 },
+    valueRating: { type: Number, default: 0 },
+    facilitiesRating: { type: Number, default: 0 },
+    qualityRating: { type: Number, default: 0 },
+    accessRating: { type: Number, default: 0 },
   },
   { timestamps: true, collection: 'attractions' },
 );

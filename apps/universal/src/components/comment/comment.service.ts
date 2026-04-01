@@ -6,6 +6,7 @@ import {
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, ObjectId, Types } from 'mongoose';
 import { Comment, Comments } from '../../libs/dto/comment/comment';
+import { Attraction } from '../../libs/dto/attraction/attraction';
 import { PartnerService } from '../partner/partner/partner.service';
 import { MemberService } from '../member/member.service';
 import {
@@ -26,6 +27,7 @@ import {
 export class CommentService {
   constructor(
     @InjectModel('Comment') private readonly commentModel: Model<Comment>,
+    @InjectModel('AttractionSchema') private readonly attractionModel: Model<Attraction>,
     private readonly memberService: MemberService,
     private readonly partnerService: PartnerService,
   ) {}
@@ -36,15 +38,76 @@ export class CommentService {
   ): Promise<Comment> {
     input.memberId = memberId;
 
+    const { valueRating, facilitiesRating, qualityRating, accessRating, ...commentData } = input as any;
+
+    // Calculate commentScore from individual ratings if provided
+    const ratingValues = [valueRating, facilitiesRating, qualityRating, accessRating].filter(
+      (r) => r != null && r > 0,
+    );
+    if (ratingValues.length > 0 && !commentData.commentScore) {
+      commentData.commentScore = Math.round(
+        ratingValues.reduce((sum: number, val: number) => sum + val, 0) / ratingValues.length,
+      );
+    }
+    commentData.memberId = memberId;
+
     let result = null;
     try {
-      result = await this.commentModel.create(input);
+      result = await this.commentModel.create(commentData);
     } catch (err) {
       console.log('CommentService=>createComment Error:', err.message);
       throw new BadRequestException(Message.CREATE_FAILED);
     }
-    console.log('cooment result:', result);
     if (!result) throw new InternalServerErrorException(Message.CREATE_FAILED);
+
+    // Update attraction ratings if individual ratings are provided
+    if (ratingValues.length > 0) {
+      try {
+        const attraction = await this.attractionModel.findById(input.commentRefId).exec();
+        if (attraction) {
+          const allComments = await this.commentModel
+            .find({ commentRefId: input.commentRefId })
+            .lean()
+            .exec();
+
+          const totalReviews = allComments.length;
+          const avgScore =
+            allComments.reduce((sum, c: any) => sum + (c.commentScore ?? 0), 0) / totalReviews;
+
+          const update: any = {
+            totalReviews,
+            averageRating: parseFloat(avgScore.toFixed(1)),
+          };
+
+          // Recalculate individual ratings using incremental average
+          if (valueRating) {
+            update.valueRating = parseFloat(
+              (((attraction.valueRating || 0) * (totalReviews - 1) + valueRating) / totalReviews).toFixed(1),
+            );
+          }
+          if (facilitiesRating) {
+            update.facilitiesRating = parseFloat(
+              (((attraction.facilitiesRating || 0) * (totalReviews - 1) + facilitiesRating) / totalReviews).toFixed(1),
+            );
+          }
+          if (qualityRating) {
+            update.qualityRating = parseFloat(
+              (((attraction.qualityRating || 0) * (totalReviews - 1) + qualityRating) / totalReviews).toFixed(1),
+            );
+          }
+          if (accessRating) {
+            update.accessRating = parseFloat(
+              (((attraction.accessRating || 0) * (totalReviews - 1) + accessRating) / totalReviews).toFixed(1),
+            );
+          }
+
+          await this.attractionModel.findByIdAndUpdate(input.commentRefId, { $set: update }).exec();
+        }
+      } catch (err) {
+        console.log('Rating update error:', err.message);
+      }
+    }
+
     return result;
   }
 

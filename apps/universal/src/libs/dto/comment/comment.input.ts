@@ -15,6 +15,26 @@ export class CommentInput {
   @Field(() => String)
   commentRefId: ObjectId;
 
+  @IsOptional()
+  @Field(() => Int, { nullable: true })
+  commentScore?: number;
+
+  @IsOptional()
+  @Field(() => Int, { nullable: true })
+  valueRating?: number;
+
+  @IsOptional()
+  @Field(() => Int, { nullable: true })
+  facilitiesRating?: number;
+
+  @IsOptional()
+  @Field(() => Int, { nullable: true })
+  qualityRating?: number;
+
+  @IsOptional()
+  @Field(() => Int, { nullable: true })
+  accessRating?: number;
+
   memberId?: ObjectId;
 }
 

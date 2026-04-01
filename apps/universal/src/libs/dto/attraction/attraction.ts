@@ -85,6 +85,18 @@ export class Attraction {
   @Field(() => Float)
   averageRating: number;
 
+  @Field(() => Float, { nullable: true })
+  valueRating?: number;
+
+  @Field(() => Float, { nullable: true })
+  facilitiesRating?: number;
+
+  @Field(() => Float, { nullable: true })
+  qualityRating?: number;
+
+  @Field(() => Float, { nullable: true })
+  accessRating?: number;
+
   @Field(() => Date)
   createdAt: Date;
 

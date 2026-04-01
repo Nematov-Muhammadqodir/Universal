@@ -3,13 +3,17 @@ import { CommentResolver } from './comment.resolver';
 import { CommentService } from './comment.service';
 import { MongooseModule } from '@nestjs/mongoose';
 import CommentSchema from '../../schemas/Comment.model';
+import AttractionSchema from '../../schemas/Attraction.model';
 import { AuthModule } from '../auth/auth.module';
 import { MemberModule } from '../member/member.module';
 import { PartnerModule } from '../partner/partner/partner.module';
 
 @Module({
   imports: [
-    MongooseModule.forFeature([{ name: 'Comment', schema: CommentSchema }]),
+    MongooseModule.forFeature([
+      { name: 'Comment', schema: CommentSchema },
+      { name: 'AttractionSchema', schema: AttractionSchema },
+    ]),
     AuthModule,
     MemberModule,
     PartnerModule,
