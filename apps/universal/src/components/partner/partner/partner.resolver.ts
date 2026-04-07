@@ -32,6 +32,7 @@ import { OwnerReservations } from 'apps/universal/src/libs/dto/reservationInfo/r
 import { MostPickedItem } from 'apps/universal/src/libs/dto/mostPicked/mostPicked';
 import { ExploreRegion } from 'apps/universal/src/libs/dto/explore/explore';
 import { PropertyTypeStats } from 'apps/universal/src/libs/dto/propertyTypeStats/propertyTypeStats';
+import { Attraction } from 'apps/universal/src/libs/dto/attraction/attraction';
 
 @Resolver()
 export class PartnerResolver {
@@ -234,5 +235,11 @@ export class PartnerResolver {
   public async getExploreRegions(): Promise<ExploreRegion[]> {
     console.log('Query: getExploreRegions');
     return await this.partnerService.getExploreRegions();
+  }
+
+  @Query(() => [Attraction])
+  public async getPopularAttractions(): Promise<Attraction[]> {
+    console.log('Query: getPopularAttractions');
+    return await this.partnerService.getPopularAttractions();
   }
 }

@@ -731,6 +731,18 @@ export class PartnerService {
       .exec();
   }
 
+  public async getPopularAttractions(): Promise<any[]> {
+    return await this.attractionModel
+      .find({
+        attractionStatus: 'ACTIVE',
+        attractionImages: { $exists: true, $ne: [] },
+      })
+      .sort({ attractionViews: -1 })
+      .limit(8)
+      .lean()
+      .exec();
+  }
+
   public async getPropertyTypeStats(): Promise<any[]> {
     const result = await this.partnerPropertyModel.aggregate([
       { $match: { propertyStatus: 'ACTIVE' } },
