@@ -183,6 +183,18 @@ export class AttractionsInquiry {
   attractionCountry?: string;
 
   @IsOptional()
+  @Field(() => Boolean, { nullable: true })
+  freeCancellation?: boolean;
+
+  @IsOptional()
+  @Field(() => Int, { nullable: true })
+  priceMin?: number;
+
+  @IsOptional()
+  @Field(() => Int, { nullable: true })
+  priceMax?: number;
+
+  @IsOptional()
   @Field(() => String, { nullable: true })
   sort?: string;
 }

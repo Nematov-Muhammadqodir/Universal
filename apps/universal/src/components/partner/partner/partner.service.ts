@@ -247,6 +247,8 @@ export class PartnerService {
       parkingIncluded,
       allowChildren,
       allowPets,
+      priceMin,
+      priceMax,
       from,
       until,
       adults,
@@ -285,15 +287,35 @@ export class PartnerService {
       if (propertyRegion)
         match.propertyRegion = { $regex: new RegExp(propertyRegion, 'i') };
 
-      const result = await this.partnerPropertyModel.aggregate([
-        { $match: match },
-        {
-          $facet: {
-            list: [{ $skip: (page - 1) * limit }, { $limit: limit }],
-            metaCounter: [{ $count: 'total' }],
+      const pipeline: any[] = [{ $match: match }];
+
+      // If price filter, join rooms and filter by price
+      if (priceMin !== undefined || priceMax !== undefined) {
+        pipeline.push({
+          $lookup: {
+            from: 'partnerPropertyRooms',
+            localField: '_id',
+            foreignField: 'propertyId',
+            as: '_rooms',
           },
+        });
+        const roomPriceMatch: any = {};
+        if (priceMin !== undefined) roomPriceMatch.$gte = priceMin;
+        if (priceMax !== undefined) roomPriceMatch.$lte = priceMax;
+        pipeline.push({
+          $match: { '_rooms.roomPricePerNight': roomPriceMatch },
+        });
+        pipeline.push({ $project: { _rooms: 0 } });
+      }
+
+      pipeline.push({
+        $facet: {
+          list: [{ $skip: (page - 1) * limit }, { $limit: limit }],
+          metaCounter: [{ $count: 'total' }],
         },
-      ]);
+      });
+
+      const result = await this.partnerPropertyModel.aggregate(pipeline);
 
       if (!result.length) return [];
       const properties = result[0].list;
@@ -348,6 +370,12 @@ export class PartnerService {
           if (totalGuests > 0 && room.numberOfGuestsCanStay < totalGuests)
             return false;
 
+          // Filter by price range
+          if (priceMin !== undefined && room.roomPricePerNight < priceMin)
+            return false;
+          if (priceMax !== undefined && room.roomPricePerNight > priceMax)
+            return false;
+
           // Filter by date availability
           if (fromDate && untilDate && room.reservedDates?.length) {
             const hasConflict = room.reservedDates.some((rd: any) => {
@@ -378,7 +406,12 @@ export class PartnerService {
       return property;
     });
 
-    return await this.attachMeLiked(enrichedProperties, memberId);
+    // If price filter is active, exclude properties with no matching rooms
+    const filtered = (priceMin !== undefined || priceMax !== undefined)
+      ? enrichedProperties.filter((p: any) => p.propertyRooms?.length > 0)
+      : enrichedProperties;
+
+    return await this.attachMeLiked(filtered, memberId);
   }
 
   private async attachMeLiked(
@@ -729,6 +762,71 @@ export class PartnerService {
         { new: true },
       )
       .exec();
+  }
+
+  public async getThemeParksAndResorts(): Promise<any[]> {
+    const [themeParks, resorts] = await Promise.all([
+      this.attractionModel
+        .find({
+          attractionStatus: 'ACTIVE',
+          attractionType: { $in: ['Theme Park', 'Water Park'] },
+          attractionImages: { $exists: true, $ne: [] },
+        })
+        .sort({ attractionViews: -1 })
+        .limit(6)
+        .lean()
+        .exec(),
+      this.partnerPropertyModel
+        .find({
+          propertyStatus: 'ACTIVE',
+          propertyType: 'Resort',
+          propertyImages: { $exists: true, $ne: [] },
+        })
+        .sort({ propertyViews: -1 })
+        .limit(6)
+        .lean()
+        .exec(),
+    ]);
+
+    const items: any[] = [];
+
+    for (const a of themeParks) {
+      items.push({
+        _id: a._id.toString(),
+        itemType: 'ATTRACTION',
+        name: a.attractionName,
+        city: a.attractionCity,
+        country: a.attractionCountry,
+        image: a.attractionImages?.[0] ?? '',
+        price: a.attractionAdultPrice ?? 0,
+        rating: a.averageRating ?? 0,
+        totalReviews: a.totalReviews ?? 0,
+        attractionType: a.attractionType,
+      });
+    }
+
+    for (const p of resorts) {
+      const rooms = await this.partnerPropertyRoomModel
+        .find({ propertyId: p._id })
+        .sort({ roomPricePerNight: 1 })
+        .limit(1)
+        .lean();
+
+      items.push({
+        _id: p._id.toString(),
+        itemType: 'PROPERTY',
+        name: p.propertyName,
+        city: p.propertyCity,
+        country: p.propertyCountry,
+        image: p.propertyImages?.[0] ?? '',
+        price: rooms[0]?.roomPricePerNight ?? 0,
+        rating: p.staffRating ?? 0,
+        totalReviews: p.totalReviews ?? 0,
+        propertyType: 'Resort',
+      });
+    }
+
+    return items;
   }
 
   public async getAvailableCities(): Promise<string[]> {

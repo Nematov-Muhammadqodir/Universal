@@ -92,7 +92,7 @@ export class AttractionService {
     input: AttractionsInquiry,
     memberId?: ObjectId,
   ): Promise<Attractions> {
-    const { page, limit, attractionType, attractionCity, attractionCountry, sort } = input;
+    const { page, limit, attractionType, attractionCity, attractionCountry, freeCancellation, priceMin, priceMax, sort } = input;
 
     const match: T = { attractionStatus: AttractionStatus.ACTIVE };
 
@@ -100,10 +100,18 @@ export class AttractionService {
       match.attractionType = attractionType;
     }
     if (attractionCity) {
-      match.attractionCity = attractionCity;
+      match.attractionCity = { $regex: new RegExp(attractionCity, 'i') };
     }
     if (attractionCountry) {
-      match.attractionCountry = attractionCountry;
+      match.attractionCountry = { $regex: new RegExp(attractionCountry, 'i') };
+    }
+    if (freeCancellation !== undefined) {
+      match.freeCancellation = freeCancellation;
+    }
+    if (priceMin !== undefined || priceMax !== undefined) {
+      match.attractionAdultPrice = {};
+      if (priceMin !== undefined) match.attractionAdultPrice.$gte = priceMin;
+      if (priceMax !== undefined) match.attractionAdultPrice.$lte = priceMax;
     }
 
     let sortStage: T = { attractionViews: -1 }; // default: top picks (most views)

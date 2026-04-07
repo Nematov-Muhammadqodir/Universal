@@ -255,4 +255,10 @@ export class PartnerResolver {
     console.log('Query: getAvailableCities');
     return await this.partnerService.getAvailableCities();
   }
+
+  @Query(() => [MostPickedItem])
+  public async getThemeParksAndResorts(): Promise<MostPickedItem[]> {
+    console.log('Query: getThemeParksAndResorts');
+    return await this.partnerService.getThemeParksAndResorts();
+  }
 }

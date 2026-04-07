@@ -132,6 +132,12 @@ export class AvailablePropertiesSearchInput {
   @Field(() => Int, { nullable: true })
   children?: number;
 
+  @Field(() => Int, { nullable: true })
+  priceMin?: number;
+
+  @Field(() => Int, { nullable: true })
+  priceMax?: number;
+
   @Field(() => Int, { defaultValue: 1 })
   page: number;
 
