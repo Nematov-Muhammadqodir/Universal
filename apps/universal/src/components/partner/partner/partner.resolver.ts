@@ -29,6 +29,7 @@ import { PartnerPropertyUpdate } from 'apps/universal/src/libs/dto/partner/partn
 import { AuthGuard } from '../../auth/guards/auth.guard';
 import { PartnerPropertyRoomUpdate } from 'apps/universal/src/libs/dto/partner/partnerProperty/partnerPropertyRoom/partnerPropertyRoom.update';
 import { OwnerReservations } from 'apps/universal/src/libs/dto/reservationInfo/reservationInfo.owner';
+import { MostPickedItem } from 'apps/universal/src/libs/dto/mostPicked/mostPicked';
 
 @Resolver()
 export class PartnerResolver {
@@ -213,5 +214,11 @@ export class PartnerResolver {
     console.log('Mutation: likeTargetProperty');
     const likeRefId = shapeIntoMongoObjectId(input);
     return await this.partnerService.likeTargetProperty(memberId, likeRefId);
+  }
+
+  @Query(() => [MostPickedItem])
+  public async getMostPicked(): Promise<MostPickedItem[]> {
+    console.log('Query: getMostPicked');
+    return await this.partnerService.getMostPicked();
   }
 }

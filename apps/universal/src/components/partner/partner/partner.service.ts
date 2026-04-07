@@ -48,6 +48,8 @@ export class PartnerService {
     private readonly partnerPropertyModel: Model<PartnerProperty>,
     @InjectModel('ReservationInfoSchema')
     private readonly reservationModel: Model<ReservationInfo>,
+    @InjectModel('AttractionSchema')
+    private readonly attractionModel: Model<any>,
     private authService: AuthService,
     private viewService: ViewService,
     private likeService: LikeService,
@@ -727,5 +729,74 @@ export class PartnerService {
         { new: true },
       )
       .exec();
+  }
+
+  public async getMostPicked(): Promise<any[]> {
+    // Get top 3 hotels by views (with at least 1 image)
+    const topProperties = await this.partnerPropertyModel
+      .find({ propertyStatus: 'ACTIVE', propertyImages: { $exists: true, $ne: [] } })
+      .sort({ propertyViews: -1 })
+      .limit(3)
+      .lean()
+      .exec();
+
+    // Get top 3 attractions by views (with at least 1 image)
+    const topAttractions = await this.attractionModel
+      .find({ attractionStatus: 'ACTIVE', attractionImages: { $exists: true, $ne: [] } })
+      .sort({ attractionViews: -1 })
+      .limit(3)
+      .lean()
+      .exec();
+
+    const items: any[] = [];
+
+    // Map properties
+    for (const p of topProperties) {
+      // Get cheapest room price
+      const rooms = await this.partnerPropertyRoomModel
+        .find({ propertyId: p._id })
+        .sort({ roomPricePerNight: 1 })
+        .limit(1)
+        .lean();
+      const cheapestPrice = rooms[0]?.roomPricePerNight ?? 0;
+
+      items.push({
+        _id: p._id.toString(),
+        itemType: 'PROPERTY',
+        name: p.propertyName,
+        city: p.propertyCity,
+        country: p.propertyCountry,
+        image: p.propertyImages?.[0] ?? '',
+        price: cheapestPrice,
+        rating: p.staffRating ?? 0,
+        totalReviews: p.totalReviews ?? 0,
+        views: p.propertyViews ?? 0,
+        likes: p.propertyLikes ?? 0,
+        propertyType: p.propertyType,
+      });
+    }
+
+    // Map attractions
+    for (const a of topAttractions) {
+      items.push({
+        _id: a._id.toString(),
+        itemType: 'ATTRACTION',
+        name: a.attractionName,
+        city: a.attractionCity,
+        country: a.attractionCountry,
+        image: a.attractionImages?.[0] ?? '',
+        price: a.attractionAdultPrice ?? 0,
+        rating: a.averageRating ?? 0,
+        totalReviews: a.totalReviews ?? 0,
+        views: a.attractionViews ?? 0,
+        likes: a.attractionLikes ?? 0,
+        attractionType: a.attractionType,
+      });
+    }
+
+    // Sort combined by views descending
+    items.sort((a, b) => b.views - a.views);
+
+    return items;
   }
 }
