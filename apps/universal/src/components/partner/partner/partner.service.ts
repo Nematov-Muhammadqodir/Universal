@@ -731,6 +731,33 @@ export class PartnerService {
       .exec();
   }
 
+  public async getAvailableCities(): Promise<string[]> {
+    const [propertyCities, attractionCities] = await Promise.all([
+      this.partnerPropertyModel.distinct('propertyCity', { propertyStatus: 'ACTIVE' }),
+      this.attractionModel.distinct('attractionCity', { attractionStatus: 'ACTIVE' }),
+    ]);
+    return [...new Set([...propertyCities, ...attractionCities])].sort();
+  }
+
+  public async getPlatformStats(): Promise<any> {
+    const [totalUsers, totalProperties, totalAttractions, propertyCities, attractionCities] =
+      await Promise.all([
+        this.partnerModel.db.collection('guests').countDocuments(),
+        this.partnerPropertyModel.countDocuments({ propertyStatus: 'ACTIVE' }),
+        this.attractionModel.countDocuments({ attractionStatus: 'ACTIVE' }),
+        this.partnerPropertyModel.distinct('propertyCity', { propertyStatus: 'ACTIVE' }),
+        this.attractionModel.distinct('attractionCity', { attractionStatus: 'ACTIVE' }),
+      ]);
+
+    const uniqueCities = new Set([...propertyCities, ...attractionCities]);
+
+    return {
+      totalUsers,
+      totalListings: totalProperties + totalAttractions,
+      totalCities: uniqueCities.size,
+    };
+  }
+
   public async getPopularAttractions(): Promise<any[]> {
     return await this.attractionModel
       .find({

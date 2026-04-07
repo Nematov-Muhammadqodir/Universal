@@ -33,6 +33,7 @@ import { MostPickedItem } from 'apps/universal/src/libs/dto/mostPicked/mostPicke
 import { ExploreRegion } from 'apps/universal/src/libs/dto/explore/explore';
 import { PropertyTypeStats } from 'apps/universal/src/libs/dto/propertyTypeStats/propertyTypeStats';
 import { Attraction } from 'apps/universal/src/libs/dto/attraction/attraction';
+import { PlatformStats } from 'apps/universal/src/libs/dto/platformStats/platformStats';
 
 @Resolver()
 export class PartnerResolver {
@@ -241,5 +242,17 @@ export class PartnerResolver {
   public async getPopularAttractions(): Promise<Attraction[]> {
     console.log('Query: getPopularAttractions');
     return await this.partnerService.getPopularAttractions();
+  }
+
+  @Query(() => PlatformStats)
+  public async getPlatformStats(): Promise<PlatformStats> {
+    console.log('Query: getPlatformStats');
+    return await this.partnerService.getPlatformStats();
+  }
+
+  @Query(() => [String])
+  public async getAvailableCities(): Promise<string[]> {
+    console.log('Query: getAvailableCities');
+    return await this.partnerService.getAvailableCities();
   }
 }
