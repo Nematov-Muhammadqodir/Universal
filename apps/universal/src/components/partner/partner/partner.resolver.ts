@@ -30,6 +30,8 @@ import { AuthGuard } from '../../auth/guards/auth.guard';
 import { PartnerPropertyRoomUpdate } from 'apps/universal/src/libs/dto/partner/partnerProperty/partnerPropertyRoom/partnerPropertyRoom.update';
 import { OwnerReservations } from 'apps/universal/src/libs/dto/reservationInfo/reservationInfo.owner';
 import { MostPickedItem } from 'apps/universal/src/libs/dto/mostPicked/mostPicked';
+import { ExploreRegion } from 'apps/universal/src/libs/dto/explore/explore';
+import { PropertyTypeStats } from 'apps/universal/src/libs/dto/propertyTypeStats/propertyTypeStats';
 
 @Resolver()
 export class PartnerResolver {
@@ -220,5 +222,17 @@ export class PartnerResolver {
   public async getMostPicked(): Promise<MostPickedItem[]> {
     console.log('Query: getMostPicked');
     return await this.partnerService.getMostPicked();
+  }
+
+  @Query(() => [PropertyTypeStats])
+  public async getPropertyTypeStats(): Promise<PropertyTypeStats[]> {
+    console.log('Query: getPropertyTypeStats');
+    return await this.partnerService.getPropertyTypeStats();
+  }
+
+  @Query(() => [ExploreRegion])
+  public async getExploreRegions(): Promise<ExploreRegion[]> {
+    console.log('Query: getExploreRegions');
+    return await this.partnerService.getExploreRegions();
   }
 }

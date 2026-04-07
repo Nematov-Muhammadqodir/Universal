@@ -731,6 +731,92 @@ export class PartnerService {
       .exec();
   }
 
+  public async getPropertyTypeStats(): Promise<any[]> {
+    const result = await this.partnerPropertyModel.aggregate([
+      { $match: { propertyStatus: 'ACTIVE' } },
+      {
+        $group: {
+          _id: '$propertyType',
+          count: { $sum: 1 },
+          image: { $first: { $arrayElemAt: ['$propertyImages', 0] } },
+        },
+      },
+      { $sort: { count: -1 } },
+    ]);
+
+    return result.map((r: any) => ({
+      propertyType: r._id,
+      count: r.count,
+      image: r.image ?? '',
+    }));
+  }
+
+  public async getExploreRegions(): Promise<any[]> {
+    // Aggregate properties by region
+    const propertyRegions = await this.partnerPropertyModel.aggregate([
+      { $match: { propertyStatus: 'ACTIVE' } },
+      {
+        $group: {
+          _id: { region: '$propertyRegion', country: '$propertyCountry' },
+          count: { $sum: 1 },
+          topImage: { $first: { $arrayElemAt: ['$propertyImages', 0] } },
+          topViews: { $max: '$propertyViews' },
+        },
+      },
+    ]);
+
+    // Aggregate attractions by region
+    const attractionRegions = await this.attractionModel.aggregate([
+      { $match: { attractionStatus: 'ACTIVE' } },
+      {
+        $group: {
+          _id: { region: '$attractionRegion', country: '$attractionCountry' },
+          count: { $sum: 1 },
+          topImage: { $first: { $arrayElemAt: ['$attractionImages', 0] } },
+        },
+      },
+    ]);
+
+    // Merge into a map by region+country
+    const regionMap = new Map<string, any>();
+
+    for (const p of propertyRegions) {
+      const key = `${p._id.region}::${p._id.country}`;
+      regionMap.set(key, {
+        region: p._id.region,
+        country: p._id.country,
+        image: p.topImage || '',
+        propertyCount: p.count,
+        attractionCount: 0,
+        totalListings: p.count,
+      });
+    }
+
+    for (const a of attractionRegions) {
+      const key = `${a._id.region}::${a._id.country}`;
+      const existing = regionMap.get(key);
+      if (existing) {
+        existing.attractionCount = a.count;
+        existing.totalListings += a.count;
+        if (!existing.image && a.topImage) existing.image = a.topImage;
+      } else {
+        regionMap.set(key, {
+          region: a._id.region,
+          country: a._id.country,
+          image: a.topImage || '',
+          propertyCount: 0,
+          attractionCount: a.count,
+          totalListings: a.count,
+        });
+      }
+    }
+
+    // Sort by total listings descending
+    return Array.from(regionMap.values()).sort(
+      (a, b) => b.totalListings - a.totalListings,
+    );
+  }
+
   public async getMostPicked(): Promise<any[]> {
     // Get top 3 hotels by views (with at least 1 image)
     const topProperties = await this.partnerPropertyModel
