@@ -371,10 +371,9 @@ export class PartnerService {
             return false;
 
           // Filter by price range
-          if (priceMin !== undefined && room.roomPricePerNight < priceMin)
-            return false;
-          if (priceMax !== undefined && room.roomPricePerNight > priceMax)
-            return false;
+          const roomPrice = Number(room.roomPricePerNight);
+          if (priceMin !== undefined && roomPrice < priceMin) return false;
+          if (priceMax !== undefined && roomPrice > priceMax) return false;
 
           // Filter by date availability
           if (fromDate && untilDate && room.reservedDates?.length) {
