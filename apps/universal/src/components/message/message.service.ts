@@ -53,10 +53,10 @@ export class MessageService {
     // Send notification to receiver
     let senderName = 'Someone';
     if (senderRole === 'GUEST') {
-      const guest = await this.guestModel.findById(senderId).lean();
+      const guest: any = await this.guestModel.findById(senderId).lean();
       senderName = guest?.guestName || 'A guest';
     } else {
-      const partner = await this.partnerModel.findById(senderId).lean();
+      const partner: any = await this.partnerModel.findById(senderId).lean();
       senderName = partner ? `${partner.partnerFirstName} ${partner.partnerLastName}` : 'Property owner';
     }
 
@@ -113,12 +113,12 @@ export class MessageService {
       let otherParticipantImage = '';
 
       // Try guest first, then partner
-      const guest = await this.guestModel.findById(otherParticipantId).lean();
+      const guest: any = await this.guestModel.findById(otherParticipantId).lean();
       if (guest) {
         otherParticipantName = guest.guestFullName || guest.guestName || 'Guest';
         otherParticipantImage = guest.guestImage || '';
       } else {
-        const partner = await this.partnerModel.findById(otherParticipantId).lean();
+        const partner: any = await this.partnerModel.findById(otherParticipantId).lean();
         if (partner) {
           otherParticipantName = `${partner.partnerFirstName} ${partner.partnerLastName}`;
           otherParticipantImage = '';

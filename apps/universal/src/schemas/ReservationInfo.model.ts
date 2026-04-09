@@ -15,6 +15,7 @@ export interface IReservationInfo extends Document {
   startDate: string;
   endDate: string;
   ageConfirmation: boolean;
+  reservationStatus?: string;
   createdAt?: Date;
   updatedAt?: Date;
 }
