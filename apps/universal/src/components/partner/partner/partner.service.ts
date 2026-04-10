@@ -270,7 +270,7 @@ export class PartnerService {
     console.log('isPropertyLevelFilter', isPropertyLevelFilter);
 
     if (isPropertyLevelFilter) {
-      const match: any = { propertyStatus: PropertyStatus.ACTIVE };
+      const match: any = { propertyStatus: { $nin: [PropertyStatus.SOLD, PropertyStatus.DELETE] } };
 
       if (propertyType && propertyType.length > 0) {
         match.propertyType = { $in: propertyType };
@@ -325,7 +325,7 @@ export class PartnerService {
     }
 
     // ✅ Otherwise, use region-based property search with room availability info
-    const propertyMatch: any = { propertyStatus: PropertyStatus.ACTIVE };
+    const propertyMatch: any = { propertyStatus: { $nin: [PropertyStatus.SOLD, PropertyStatus.DELETE] } };
 
     if (propertyRegion) {
       propertyMatch.propertyRegion = {
