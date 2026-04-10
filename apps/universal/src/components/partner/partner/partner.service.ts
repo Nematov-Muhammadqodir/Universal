@@ -237,7 +237,7 @@ export class PartnerService {
   public async getAllAvailableProperties(
     input: AvailablePropertiesSearchInput,
     memberId?: ObjectId,
-  ): Promise<PartnerProperty[]> {
+  ): Promise<any> {
     const {
       propertyRegion,
       propertyCity,
@@ -317,9 +317,11 @@ export class PartnerService {
 
       const result = await this.partnerPropertyModel.aggregate(pipeline);
 
-      if (!result.length) return [];
+      if (!result.length) return { list: [], metaCounter: [{ total: 0 }] };
       const properties = result[0].list;
-      return await this.attachMeLiked(properties, memberId);
+      const metaCounter = result[0].metaCounter;
+      const list = await this.attachMeLiked(properties, memberId);
+      return { list, metaCounter: metaCounter.length ? metaCounter : [{ total: 0 }] };
     }
 
     // ✅ Otherwise, use region-based property search with room availability info
@@ -340,13 +342,16 @@ export class PartnerService {
       propertyMatch.allowChildren = allowChildren;
     if (allowPets !== undefined) propertyMatch.allowPets = allowPets;
 
-    // Fetch all matching properties
-    const properties = await this.partnerPropertyModel
-      .find(propertyMatch)
-      .skip((page - 1) * limit)
-      .limit(limit)
-      .lean()
-      .exec();
+    // Fetch all matching properties + total count
+    const [properties, totalCount] = await Promise.all([
+      this.partnerPropertyModel
+        .find(propertyMatch)
+        .skip((page - 1) * limit)
+        .limit(limit)
+        .lean()
+        .exec(),
+      this.partnerPropertyModel.countDocuments(propertyMatch),
+    ]);
 
     // Fetch rooms for these properties and attach only available ones
     const propertyIds = properties.map((p) => p._id);
@@ -410,7 +415,8 @@ export class PartnerService {
       ? enrichedProperties.filter((p: any) => p.propertyRooms?.length > 0)
       : enrichedProperties;
 
-    return await this.attachMeLiked(filtered, memberId);
+    const list = await this.attachMeLiked(filtered, memberId);
+    return { list, metaCounter: [{ total: totalCount }] };
   }
 
   private async attachMeLiked(
