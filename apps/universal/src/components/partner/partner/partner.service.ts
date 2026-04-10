@@ -267,10 +267,10 @@ export class PartnerService {
       allowChildren !== undefined ||
       allowPets !== undefined;
 
-    console.log('isPropertyLevelFilter', isPropertyLevelFilter);
-
     if (isPropertyLevelFilter) {
-      const match: any = { propertyStatus: { $nin: [PropertyStatus.SOLD, PropertyStatus.DELETE] } };
+      const match: any = {
+        propertyStatus: { $nin: [PropertyStatus.SOLD, PropertyStatus.DELETE] },
+      };
 
       if (propertyType && propertyType.length > 0) {
         match.propertyType = { $in: propertyType };
@@ -321,11 +321,16 @@ export class PartnerService {
       const properties = result[0].list;
       const metaCounter = result[0].metaCounter;
       const list = await this.attachMeLiked(properties, memberId);
-      return { list, metaCounter: metaCounter.length ? metaCounter : [{ total: 0 }] };
+      return {
+        list,
+        metaCounter: metaCounter.length ? metaCounter : [{ total: 0 }],
+      };
     }
 
     // ✅ Otherwise, use region-based property search with room availability info
-    const propertyMatch: any = { propertyStatus: { $nin: [PropertyStatus.SOLD, PropertyStatus.DELETE] } };
+    const propertyMatch: any = {
+      propertyStatus: { $nin: [PropertyStatus.SOLD, PropertyStatus.DELETE] },
+    };
 
     if (propertyRegion) {
       propertyMatch.propertyRegion = {
@@ -361,9 +366,7 @@ export class PartnerService {
       .exec();
 
     const totalGuests =
-      ((adults || 0) + (children || 0)) > 0
-        ? (adults || 0) + (children || 0)
-        : 0;
+      (adults || 0) + (children || 0) > 0 ? (adults || 0) + (children || 0) : 0;
     const fromDate = from ? new Date(from) : null;
     const untilDate = until ? new Date(until) : null;
 
@@ -385,7 +388,9 @@ export class PartnerService {
             const hasConflict = room.reservedDates.some((rd: any) => {
               const rdFrom = new Date(rd.from).getTime();
               const rdUntil = new Date(rd.until).getTime();
-              return fromDate.getTime() < rdUntil && untilDate.getTime() > rdFrom;
+              return (
+                fromDate.getTime() < rdUntil && untilDate.getTime() > rdFrom
+              );
             });
             if (hasConflict) return false;
           }
@@ -411,9 +416,10 @@ export class PartnerService {
     });
 
     // If price filter is active, exclude properties with no matching rooms
-    const filtered = (priceMin !== undefined || priceMax !== undefined)
-      ? enrichedProperties.filter((p: any) => p.propertyRooms?.length > 0)
-      : enrichedProperties;
+    const filtered =
+      priceMin !== undefined || priceMax !== undefined
+        ? enrichedProperties.filter((p: any) => p.propertyRooms?.length > 0)
+        : enrichedProperties;
 
     const list = await this.attachMeLiked(filtered, memberId);
     return { list, metaCounter: [{ total: totalCount }] };
@@ -436,7 +442,13 @@ export class PartnerService {
         (l) => l.likeRefId?.toString() === p._id?.toString(),
       );
       p.meLiked = liked
-        ? [{ memberId: memberId.toString(), likeRefId: p._id.toString(), myFavorite: true }]
+        ? [
+            {
+              memberId: memberId.toString(),
+              likeRefId: p._id.toString(),
+              myFavorite: true,
+            },
+          ]
         : [];
       return p;
     });
@@ -585,9 +597,16 @@ export class PartnerService {
       // Handle room field updates (dashboard editing)
       const setFields: any = {};
       const editableFields = [
-        'roomType', 'roomName', 'roomPricePerNight', 'numberOfGuestsCanStay',
-        'currentRoomTypeAmount', 'availableBeds', 'isSmokingAllowed',
-        'isBathroomPrivate', 'roomFacilities', 'availableBathroomFacilities',
+        'roomType',
+        'roomName',
+        'roomPricePerNight',
+        'numberOfGuestsCanStay',
+        'currentRoomTypeAmount',
+        'availableBeds',
+        'isSmokingAllowed',
+        'isBathroomPrivate',
+        'roomFacilities',
+        'availableBathroomFacilities',
       ];
 
       for (const field of editableFields) {
@@ -628,9 +647,11 @@ export class PartnerService {
     const property = await this.partnerPropertyModel
       .findOne({ _id: room.propertyId, partnerId: memberId })
       .lean();
-    if (!property) throw new BadRequestException('Unauthorized: not your property');
+    if (!property)
+      throw new BadRequestException('Unauthorized: not your property');
 
-    const result = await this.partnerPropertyRoomModel.findByIdAndDelete(roomId);
+    const result =
+      await this.partnerPropertyRoomModel.findByIdAndDelete(roomId);
     return result;
   }
 
@@ -672,10 +693,7 @@ export class PartnerService {
       },
       {
         $facet: {
-          list: [
-            { $skip: (page - 1) * limit },
-            { $limit: limit },
-          ],
+          list: [{ $skip: (page - 1) * limit }, { $limit: limit }],
           metaCounter: [{ $count: 'total' }],
         },
       },
@@ -836,21 +854,34 @@ export class PartnerService {
 
   public async getAvailableCities(): Promise<string[]> {
     const [propertyCities, attractionCities] = await Promise.all([
-      this.partnerPropertyModel.distinct('propertyCity', { propertyStatus: 'ACTIVE' }),
-      this.attractionModel.distinct('attractionCity', { attractionStatus: 'ACTIVE' }),
+      this.partnerPropertyModel.distinct('propertyCity', {
+        propertyStatus: 'ACTIVE',
+      }),
+      this.attractionModel.distinct('attractionCity', {
+        attractionStatus: 'ACTIVE',
+      }),
     ]);
     return [...new Set([...propertyCities, ...attractionCities])].sort();
   }
 
   public async getPlatformStats(): Promise<any> {
-    const [totalUsers, totalProperties, totalAttractions, propertyCities, attractionCities] =
-      await Promise.all([
-        this.partnerModel.db.collection('guests').countDocuments(),
-        this.partnerPropertyModel.countDocuments({ propertyStatus: 'ACTIVE' }),
-        this.attractionModel.countDocuments({ attractionStatus: 'ACTIVE' }),
-        this.partnerPropertyModel.distinct('propertyCity', { propertyStatus: 'ACTIVE' }),
-        this.attractionModel.distinct('attractionCity', { attractionStatus: 'ACTIVE' }),
-      ]);
+    const [
+      totalUsers,
+      totalProperties,
+      totalAttractions,
+      propertyCities,
+      attractionCities,
+    ] = await Promise.all([
+      this.partnerModel.db.collection('guests').countDocuments(),
+      this.partnerPropertyModel.countDocuments({ propertyStatus: 'ACTIVE' }),
+      this.attractionModel.countDocuments({ attractionStatus: 'ACTIVE' }),
+      this.partnerPropertyModel.distinct('propertyCity', {
+        propertyStatus: 'ACTIVE',
+      }),
+      this.attractionModel.distinct('attractionCity', {
+        attractionStatus: 'ACTIVE',
+      }),
+    ]);
 
     const uniqueCities = new Set([...propertyCities, ...attractionCities]);
 
@@ -962,7 +993,10 @@ export class PartnerService {
   public async getMostPicked(): Promise<any[]> {
     // Get top 3 hotels by views (with at least 1 image)
     const topProperties = await this.partnerPropertyModel
-      .find({ propertyStatus: 'ACTIVE', propertyImages: { $exists: true, $ne: [] } })
+      .find({
+        propertyStatus: 'ACTIVE',
+        propertyImages: { $exists: true, $ne: [] },
+      })
       .sort({ propertyViews: -1 })
       .limit(3)
       .lean()
@@ -970,7 +1004,10 @@ export class PartnerService {
 
     // Get top 3 attractions by views (with at least 1 image)
     const topAttractions = await this.attractionModel
-      .find({ attractionStatus: 'ACTIVE', attractionImages: { $exists: true, $ne: [] } })
+      .find({
+        attractionStatus: 'ACTIVE',
+        attractionImages: { $exists: true, $ne: [] },
+      })
       .sort({ attractionViews: -1 })
       .limit(3)
       .lean()
