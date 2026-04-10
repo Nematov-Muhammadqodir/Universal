@@ -179,7 +179,7 @@ You help the admin with:
 Format prices in KRW with commas. Be precise with data. Answer in the user's language.`;
 
     const model = this.genAI.getGenerativeModel({
-      model: 'gemini-2.5-flash',
+      model: 'gemini-2.0-flash',
       systemInstruction: systemPrompt,
       tools: this.geminiTools,
     });

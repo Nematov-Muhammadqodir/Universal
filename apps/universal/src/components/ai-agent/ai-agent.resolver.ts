@@ -6,6 +6,7 @@ import { UseGuards } from '@nestjs/common';
 import { AuthGuard } from '../auth/guards/auth.guard';
 import { AuthMember } from '../auth/decorators/authMember.decorator';
 import { ObjectId } from 'mongoose';
+import { WithoutGuard } from '../auth/guards/without.guard';
 
 @Resolver()
 export class AiAgentResolver {
@@ -16,13 +17,11 @@ export class AiAgentResolver {
   ) {}
 
   @Query(() => String)
-  async askAiAgent(
-    @Args('question') question: string,
-  ): Promise<string> {
+  async askAiAgent(@Args('question') question: string): Promise<string> {
     return await this.aiAgentService.askAgent(question);
   }
 
-  @UseGuards(AuthGuard)
+  @UseGuards(WithoutGuard)
   @Mutation(() => String)
   async askPartnerAiAgent(
     @Args('question') question: string,
@@ -30,7 +29,8 @@ export class AiAgentResolver {
     @AuthMember('partnerFirstName') firstName: string,
     @AuthMember('partnerLastName') lastName: string,
   ): Promise<string> {
-    const partnerName = `${firstName || ''} ${lastName || ''}`.trim() || 'Partner';
+    const partnerName =
+      `${firstName || ''} ${lastName || ''}`.trim() || 'Partner';
     return await this.partnerAiAgentService.askPartnerAgent(
       question,
       memberId.toString(),
@@ -38,11 +38,9 @@ export class AiAgentResolver {
     );
   }
 
-  @UseGuards(AuthGuard)
+  @UseGuards(WithoutGuard)
   @Mutation(() => String)
-  async askAdminAiAgent(
-    @Args('question') question: string,
-  ): Promise<string> {
+  async askAdminAiAgent(@Args('question') question: string): Promise<string> {
     return await this.adminAiAgentService.askAdminAgent(question);
   }
 }

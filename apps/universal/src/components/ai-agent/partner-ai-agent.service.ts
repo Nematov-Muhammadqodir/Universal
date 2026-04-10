@@ -282,7 +282,7 @@ When answering:
 - Answer in the user's language`;
 
     const model = this.genAI.getGenerativeModel({
-      model: 'gemini-2.5-flash',
+      model: 'gemini-2.0-flash',
       systemInstruction: systemPrompt,
       tools: this.geminiTools,
     });

@@ -54,7 +54,7 @@ export class AiAgentService {
           description:
             'Query hotel rooms. Use this to find rooms by price, type, capacity, facilities, etc. ' +
             'Fields: propertyId, roomType (Single, Double, Twin, Suite, Deluxe, Family, etc.), roomName, ' +
-            'roomPricePerNight (number), numberOfGuestsCanStay (number), ' +
+            'roomPricePerNight (stored as string but represents a number in KRW — sort with {"roomPricePerNight": 1} for cheapest), numberOfGuestsCanStay (number), ' +
             'roomFacilities (array), availableBathroomFacilities (array), ' +
             'isBathroomPrivate (boolean), isSmokingAllowed (boolean), ' +
             'availableBeds (object: single, double, king, superKing), ' +
@@ -245,8 +245,24 @@ export class AiAgentService {
       switch (name) {
         case 'query_properties':
           return await this.propertyModel.find(filter, projection).sort(sort).limit(limit).lean();
-        case 'query_rooms':
+        case 'query_rooms': {
+          // roomPricePerNight is stored as String — use aggregation to sort numerically
+          const hasPriceSort = Object.keys(sort).includes('roomPricePerNight');
+          if (hasPriceSort) {
+            const priceDir = sort['roomPricePerNight'];
+            const otherSort = { ...sort };
+            delete otherSort['roomPricePerNight'];
+            const pipeline: any[] = [
+              { $match: filter },
+              { $addFields: { _numericPrice: { $toDouble: '$roomPricePerNight' } } },
+              { $sort: { _numericPrice: priceDir, ...otherSort } },
+              { $limit: limit },
+              { $unset: '_numericPrice' },
+            ];
+            return await this.roomModel.aggregate(pipeline);
+          }
           return await this.roomModel.find(filter, projection).sort(sort).limit(limit).lean();
+        }
         case 'query_attractions':
           return await this.attractionModel.find(filter, projection).sort(sort).limit(limit).lean();
         case 'query_reservations':
@@ -282,7 +298,7 @@ You have access to tools that let you query the MongoDB database to answer user 
 Key information about the platform:
 - Hotels/Properties have types: Hotel, Guest House, Bed and Breakfast, Homestay, Hostel, Resort, Motel, Lodge, etc.
 - Properties have ratings (1-10 scale): staffRating, facilitiesRating, cleanlessRating, comfortRating, valueOfMoneyRating, locationRating, freeWiFiRating
-- Room prices are stored in roomPricePerNight (in KRW - Korean Won)
+- Room prices are stored in roomPricePerNight (in KRW - Korean Won). To find the cheapest room, use query_rooms with sort {"roomPricePerNight": 1} and limit 1. To find the most expensive, sort {"roomPricePerNight": -1}.
 - Attraction types: Tour, Museum, Theme Park, Show, Activity, Landmark, Water Park, Zoo
 - Attraction prices: attractionAdultPrice, attractionChildPrice (in KRW)
 - Attractions have ratings (1-5 scale): averageRating, valueRating, facilitiesRating, qualityRating, accessRating
@@ -298,16 +314,28 @@ When answering:
 - Keep responses concise but informative`;
 
     const model = this.genAI.getGenerativeModel({
-      model: 'gemini-2.5-flash',
+      model: 'gemini-2.0-flash',
       systemInstruction: systemPrompt,
       tools: this.geminiTools,
     });
 
-    const chat = model.startChat();
-    let response = await chat.sendMessage(question);
+    let chat;
+    let response;
+    try {
+      chat = model.startChat();
+      response = await chat.sendMessage(question);
+    } catch (error: any) {
+      if (error?.message?.includes('429') || error?.message?.includes('Too Many Requests')) {
+        return 'AI 어시스턴트의 일일 사용 한도에 도달했습니다. 이는 AI 제공업체의 일시적인 제한이며 곧 초기화됩니다. 잠시 후 다시 시도해 주세요.\n\nOur AI assistant has reached its daily usage limit. This is a temporary restriction from our AI provider and will reset shortly. Please try again in a few minutes.\n\nНаш AI-ассистент достиг дневного лимита использования. Это временное ограничение от провайдера AI, которое скоро сбросится. Пожалуйста, повторите попытку через несколько минут.\n\nAI yordamchimiz kunlik foydalanish chegarasiga yetdi. Bu AI provayderimizdagi vaqtinchalik cheklov bo\'lib, tez orada qayta tiklanadi. Iltimos, bir necha daqiqadan so\'ng qayta urinib ko\'ring.';
+      }
+      throw error;
+    }
 
     // Agentic loop: keep processing function calls until Gemini gives a text response
-    while (true) {
+    const MAX_TOOL_ROUNDS = 5;
+    let round = 0;
+    while (round < MAX_TOOL_ROUNDS) {
+      round++;
       const candidate = response.response.candidates?.[0];
       if (!candidate) break;
 
@@ -329,7 +357,14 @@ When answering:
         });
       }
 
-      response = await chat.sendMessage(functionResponses.parts);
+      try {
+        response = await chat.sendMessage(functionResponses.parts);
+      } catch (error: any) {
+        if (error?.message?.includes('429') || error?.message?.includes('Too Many Requests')) {
+          return 'AI 어시스턴트의 일일 사용 한도에 도달했습니다. 이는 AI 제공업체의 일시적인 제한이며 곧 초기화됩니다. 잠시 후 다시 시도해 주세요.\n\nOur AI assistant has reached its daily usage limit. This is a temporary restriction from our AI provider and will reset shortly. Please try again in a few minutes.\n\nНаш AI-ассистент достиг дневного лимита использования. Это временное ограничение от провайдера AI, которое скоро сбросится. Пожалуйста, повторите попытку через несколько минут.\n\nAI yordamchimiz kunlik foydalanish chegarasiga yetdi. Bu AI provayderimizdagi vaqtinchalik cheklov bo\'lib, tez orada qayta tiklanadi. Iltimos, bir necha daqiqadan so\'ng qayta urinib ko\'ring.';
+        }
+        throw error;
+      }
     }
 
     return response.response.text();
