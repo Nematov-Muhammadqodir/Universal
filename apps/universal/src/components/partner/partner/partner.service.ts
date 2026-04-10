@@ -284,7 +284,7 @@ export class PartnerService {
         match.parkingIncluded = parkingIncluded;
       if (allowChildren !== undefined) match.allowChildren = allowChildren;
       if (allowPets !== undefined) match.allowPets = allowPets;
-      if (propertyRegion)
+      if (propertyRegion && propertyRegion !== 'ALL')
         match.propertyRegion = { $regex: new RegExp(propertyRegion, 'i') };
 
       const pipeline: any[] = [{ $match: match }];
@@ -332,8 +332,10 @@ export class PartnerService {
       propertyStatus: { $nin: [PropertyStatus.SOLD, PropertyStatus.DELETE] },
     };
 
-    if (propertyRegion) {
-      propertyMatch.propertyRegion = {
+    console.log('propertyRegion', propertyRegion);
+
+    if (propertyRegion && propertyRegion !== 'ALL') {
+      propertyMatch.propertyCity = {
         $regex: new RegExp(propertyRegion, 'i'),
       };
     }
