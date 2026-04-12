@@ -184,25 +184,54 @@ Format prices in KRW with commas. Be precise with data. Answer in the user's lan
       tools: this.geminiTools,
     });
 
-    const chat = model.startChat();
-    let response = await chat.sendMessage(question);
+    try {
+      const chat = model.startChat();
+      let response = await chat.sendMessage(question);
 
-    while (true) {
-      const candidate = response.response.candidates?.[0];
-      if (!candidate) break;
-      const functionCalls = candidate.content.parts.filter((part) => part.functionCall);
-      if (functionCalls.length === 0) break;
+      while (true) {
+        const candidate = response.response.candidates?.[0];
+        if (!candidate) break;
+        const functionCalls = candidate.content.parts.filter((part) => part.functionCall);
+        if (functionCalls.length === 0) break;
 
-      const functionResponses: Content = { role: 'function' as const, parts: [] };
-      for (const part of functionCalls) {
-        const { name, args } = part.functionCall;
-        this.logger.log(`Admin tool: ${name} args: ${JSON.stringify(args)}`);
-        const result = await this.executeTool(name, args);
-        functionResponses.parts.push({ functionResponse: { name, response: { result } } });
+        const functionResponses: Content = { role: 'function' as const, parts: [] };
+        for (const part of functionCalls) {
+          const { name, args } = part.functionCall;
+          this.logger.log(`Admin tool: ${name} args: ${JSON.stringify(args)}`);
+          const result = await this.executeTool(name, args);
+          functionResponses.parts.push({ functionResponse: { name, response: { result } } });
+        }
+        response = await chat.sendMessage(functionResponses.parts);
       }
-      response = await chat.sendMessage(functionResponses.parts);
-    }
 
-    return response.response.text();
+      return response.response.text();
+    } catch (error: any) {
+      this.logger.error('Admin Gemini error', { message: error?.message, status: error?.status });
+      return buildAdminAiLimitMessage(error);
+    }
   }
+}
+
+function buildAdminAiLimitMessage(error: any): string {
+  const msg = error?.message || '';
+  const status = error?.status;
+  const limited = status === 429 || status === 503 || msg.includes('429') || msg.includes('503') || msg.includes('quota') || msg.includes('high demand') || msg.includes('Too Many Requests') || msg.includes('Service Unavailable');
+
+  if (limited) {
+    return [
+      'The AI assistant has reached its usage limit. Please try again in a minute.',
+      '',
+      'AI 어시스턴트의 사용 한도에 도달했습니다. 잠시 후 다시 시도해 주세요.',
+      '',
+      'AI yordamchimiz foydalanish chegarasiga yetdi. Iltimos, bir daqiqadan so\'ng qayta urinib ko\'ring.',
+    ].join('\n');
+  }
+
+  return [
+    'The AI assistant is temporarily unavailable. Please try again later.',
+    '',
+    'AI 어시스턴트를 일시적으로 사용할 수 없습니다. 나중에 다시 시도해 주세요.',
+    '',
+    'AI yordamchi vaqtincha mavjud emas. Iltimos, keyinroq qayta urinib ko\'ring.',
+  ].join('\n');
 }
