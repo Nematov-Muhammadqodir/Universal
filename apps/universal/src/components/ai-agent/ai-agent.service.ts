@@ -319,13 +319,24 @@ When answering:
       tools: this.geminiTools,
     });
 
+    if (!process.env.GEMINI_API_KEY) {
+      this.logger.error('GEMINI_API_KEY is not set in environment');
+      return 'AI assistant is not configured. Administrator: set GEMINI_API_KEY.';
+    }
+
     let chat;
     let response;
     try {
       chat = model.startChat();
       response = await chat.sendMessage(question);
     } catch (error: any) {
-      if (error?.message?.includes('429') || error?.message?.includes('Too Many Requests')) {
+      this.logger.error('Gemini sendMessage error', {
+        message: error?.message,
+        status: error?.status,
+        statusText: error?.statusText,
+        errorDetails: error?.errorDetails,
+      });
+      if (error?.status === 429 || error?.message?.includes('429') || error?.message?.includes('Too Many Requests')) {
         return 'AI 어시스턴트의 일일 사용 한도에 도달했습니다. 이는 AI 제공업체의 일시적인 제한이며 곧 초기화됩니다. 잠시 후 다시 시도해 주세요.\n\nOur AI assistant has reached its daily usage limit. This is a temporary restriction from our AI provider and will reset shortly. Please try again in a few minutes.\n\nНаш AI-ассистент достиг дневного лимита использования. Это временное ограничение от провайдера AI, которое скоро сбросится. Пожалуйста, повторите попытку через несколько минут.\n\nAI yordamchimiz kunlik foydalanish chegarasiga yetdi. Bu AI provayderimizdagi vaqtinchalik cheklov bo\'lib, tez orada qayta tiklanadi. Iltimos, bir necha daqiqadan so\'ng qayta urinib ko\'ring.';
       }
       throw error;
@@ -360,7 +371,13 @@ When answering:
       try {
         response = await chat.sendMessage(functionResponses.parts);
       } catch (error: any) {
-        if (error?.message?.includes('429') || error?.message?.includes('Too Many Requests')) {
+        this.logger.error('Gemini tool-round sendMessage error', {
+          message: error?.message,
+          status: error?.status,
+          statusText: error?.statusText,
+          errorDetails: error?.errorDetails,
+        });
+        if (error?.status === 429 || error?.message?.includes('429') || error?.message?.includes('Too Many Requests')) {
           return 'AI 어시스턴트의 일일 사용 한도에 도달했습니다. 이는 AI 제공업체의 일시적인 제한이며 곧 초기화됩니다. 잠시 후 다시 시도해 주세요.\n\nOur AI assistant has reached its daily usage limit. This is a temporary restriction from our AI provider and will reset shortly. Please try again in a few minutes.\n\nНаш AI-ассистент достиг дневного лимита использования. Это временное ограничение от провайдера AI, которое скоро сбросится. Пожалуйста, повторите попытку через несколько минут.\n\nAI yordamchimiz kunlik foydalanish chegarasiga yetdi. Bu AI provayderimizdagi vaqtinchalik cheklov bo\'lib, tez orada qayta tiklanadi. Iltimos, bir necha daqiqadan so\'ng qayta urinib ko\'ring.';
         }
         throw error;
